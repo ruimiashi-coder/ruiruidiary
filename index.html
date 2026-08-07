@@ -1540,13 +1540,21 @@
             income: [],
             assetSnapshots: [],  // 资产快照记录数组
             expenses: [],
-            shopping: [],  // 新增：消费记录
-            clothing: [],  // 新增：服饰记录（独立存储）
+            shopping: [],  // 消费记录
+            clothing: [],  // 服饰记录
             homeAssets: {
                 shenzhen: [],  // 深圳的家
                 chongqing: []  // 重庆的家
             },
-            travelProjects: []
+            travelProjects: [],
+            savings: {  // 旧版存款数据结构（向后兼容）
+                "现金": 0,
+                "工行存钱卡": 0,
+                "农行消费卡": 0,
+                "微信": 0,
+                "支付宝": 0
+            },
+            savingsHistory: []  // 旧版存款历史（向后兼容）
         };
 
         // 主题切换功能
@@ -1621,15 +1629,15 @@
         // 初始化服饰月份选择器
 
         document.addEventListener('DOMContentLoaded', function() {
-            loadTheme(); // 加载主题设置
+            loadTheme();
             loadData();
             renderIncome();
             renderAssetSnapshots();
             renderExpenses();
-            renderCards(); // 渲染所有卡片（消费、服饰、家居）
+            renderCards();
             renderTravelProjects();
-            autoDetectMealTime(); // 自动判断用餐时间
-            setDefaultDates(); // 设置默认日期
+            autoDetectMealTime();
+            setDefaultDates();
         });
 
         function setDefaultDates() {
@@ -3578,30 +3586,49 @@
             if (saved) {
                 accountData = JSON.parse(saved);
 
-                // 确保assetSnapshots结构存在
+                // 确保所有数据结构完整性
+                if (!accountData.income) {
+                    accountData.income = [];
+                }
                 if (!accountData.assetSnapshots) {
                     accountData.assetSnapshots = [];
                 }
-
-                // 确保homeAssets结构存在
-                if (!accountData.homeAssets) {
-                    accountData.homeAssets = {
-                        shenzhen: [],
-                        chongqing: []
-                    };
+                if (!accountData.expenses) {
+                    accountData.expenses = [];
                 }
-
-                // 确保travelProjects存在
-                if (!accountData.travelProjects) {
-                    accountData.travelProjects = [];
-                }
-
-                // 确保新的卡片数据结构存在
                 if (!accountData.shopping) {
                     accountData.shopping = [];
                 }
                 if (!accountData.clothing) {
                     accountData.clothing = [];
+                }
+                if (!accountData.homeAssets) {
+                    accountData.homeAssets = {
+                        shenzhen: [],
+                        chongqing: []
+                    };
+                } else {
+                    if (!accountData.homeAssets.shenzhen) {
+                        accountData.homeAssets.shenzhen = [];
+                    }
+                    if (!accountData.homeAssets.chongqing) {
+                        accountData.homeAssets.chongqing = [];
+                    }
+                }
+                if (!accountData.travelProjects) {
+                    accountData.travelProjects = [];
+                }
+                if (!accountData.savings) {
+                    accountData.savings = {
+                        "现金": 0,
+                        "工行存钱卡": 0,
+                        "农行消费卡": 0,
+                        "微信": 0,
+                        "支付宝": 0
+                    };
+                }
+                if (!accountData.savingsHistory) {
+                    accountData.savingsHistory = [];
                 }
             }
         }
@@ -3629,13 +3656,57 @@
                     const imported = JSON.parse(e.target.result);
                     if (confirm('导入数据将覆盖当前数据，确定继续？')) {
                         accountData = imported;
+
+                        // 确保所有数据结构完整性
+                        if (!accountData.income) {
+                            accountData.income = [];
+                        }
+                        if (!accountData.assetSnapshots) {
+                            accountData.assetSnapshots = [];
+                        }
+                        if (!accountData.expenses) {
+                            accountData.expenses = [];
+                        }
+                        if (!accountData.shopping) {
+                            accountData.shopping = [];
+                        }
+                        if (!accountData.clothing) {
+                            accountData.clothing = [];
+                        }
+                        if (!accountData.homeAssets) {
+                            accountData.homeAssets = {
+                                shenzhen: [],
+                                chongqing: []
+                            };
+                        } else {
+                            if (!accountData.homeAssets.shenzhen) {
+                                accountData.homeAssets.shenzhen = [];
+                            }
+                            if (!accountData.homeAssets.chongqing) {
+                                accountData.homeAssets.chongqing = [];
+                            }
+                        }
+                        if (!accountData.travelProjects) {
+                            accountData.travelProjects = [];
+                        }
+                        if (!accountData.savings) {
+                            accountData.savings = {
+                                "现金": 0,
+                                "工行存钱卡": 0,
+                                "农行消费卡": 0,
+                                "微信": 0,
+                                "支付宝": 0
+                            };
+                        }
+                        if (!accountData.savingsHistory) {
+                            accountData.savingsHistory = [];
+                        }
+
                         saveData();
                         renderIncome();
-                        renderSavings();
                         renderExpenses();
                         renderCards();
                         renderTravelProjects();
-                        renderCalendar();
                         renderAssetSnapshots();
                         alert('导入成功！');
                     }
