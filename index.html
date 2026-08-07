@@ -55,6 +55,12 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        body.modal-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 16px;
@@ -627,6 +633,7 @@
             overflow: visible;
             margin-bottom: 20px;
             width: 100%;
+            max-width: 100%;
         }
 
         .card-item-content {
@@ -641,7 +648,9 @@
             border: none;
             min-height: 200px;
             width: 100%;
+            max-width: 100%;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         @media (max-width: 768px) {
@@ -685,9 +694,12 @@
 
         .card-info {
             width: 100%;
+            max-width: 100%;
             text-align: center;
             margin-bottom: 0;
             order: 2;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .card-description {
@@ -695,6 +707,10 @@
             color: var(--text-gray);
             margin-bottom: 0;
             order: 4;
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         @media (max-width: 768px) {
@@ -709,6 +725,10 @@
             color: var(--text-dark);
             margin-bottom: 12px;
             order: 2;
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         @media (max-width: 768px) {
@@ -724,6 +744,10 @@
             color: var(--text-dark);
             margin-bottom: 16px;
             order: 3;
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         @media (max-width: 768px) {
@@ -1022,6 +1046,8 @@
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(4px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .modal.active {
@@ -1037,6 +1063,18 @@
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            margin: auto;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-width: 100%;
+                padding: 24px 20px;
+                max-height: 90vh;
+            }
         }
 
         .modal-header {
@@ -1844,11 +1882,13 @@
             document.getElementById('card-amount').value = '';
 
             document.getElementById('card-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭卡片添加弹窗
         function closeCardModal() {
             document.getElementById('card-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
         }
 
         // 处理图片上传
@@ -2026,11 +2066,13 @@
             document.getElementById('detail-description').textContent = card.description || '';
 
             document.getElementById('card-detail-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭卡片详情弹窗
         function closeCardDetailModal() {
             document.getElementById('card-detail-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
             currentDetailCardId = null;
             currentDetailCardType = '';
             currentDetailCardLocation = '';
@@ -2249,11 +2291,13 @@
             document.getElementById('travel-project-modal-title').textContent = project.name;
             renderTravelProjectDetail(project);
             document.getElementById('travel-project-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭旅行项目弹窗
         function closeTravelProjectModal() {
             document.getElementById('travel-project-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
             currentTravelProjectId = null;
             renderTravelProjects(); // 刷新列表
         }
@@ -2527,11 +2571,13 @@
             document.getElementById('modal-income-category').value = '';
             document.getElementById('modal-income-amount').value = '';
             document.getElementById('income-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭添加收入弹窗
         function closeIncomeModal() {
             document.getElementById('income-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
         }
 
         // 从弹窗保存收入记录
@@ -2680,11 +2726,13 @@
             pendingAssetsCount = 0;
 
             document.getElementById('asset-snapshot-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭添加资产快照弹窗
         function closeAssetSnapshotModal() {
             document.getElementById('asset-snapshot-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
         }
 
         // 添加待售资产输入框
@@ -2854,11 +2902,13 @@
 
             document.getElementById('asset-detail-content').innerHTML = detailHtml;
             document.getElementById('asset-detail-modal').classList.add('active');
+            document.body.classList.add('modal-open');
         }
 
         // 关闭资产详情弹窗
         function closeAssetDetailModal() {
             document.getElementById('asset-detail-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
             currentViewingSnapshotId = null;
         }
 
@@ -3583,11 +3633,15 @@
                         renderIncome();
                         renderSavings();
                         renderExpenses();
+                        renderCards();
+                        renderTravelProjects();
                         renderCalendar();
+                        renderAssetSnapshots();
                         alert('导入成功！');
                     }
                 } catch (error) {
                     alert('导入失败：文件格式不正确');
+                    console.error('Import error:', error);
                 }
             };
             reader.readAsText(file);
