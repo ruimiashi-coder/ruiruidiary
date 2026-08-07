@@ -2005,7 +2005,7 @@
         }
 
         // 图片压缩处理函数
-        function compressImage(file, maxWidth = 800, quality = 0.75) {
+        function compressImage(file, maxWidth = 600, quality = 0.6) {
             return new Promise((resolve, reject) => {
                 // 检查文件类型
                 const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
@@ -2034,7 +2034,7 @@
 
                     img.onload = function() {
                         try {
-                            // 计算压缩后的尺寸
+                            // 计算压缩后的尺寸（更激进的压缩）
                             let width = img.width;
                             let height = img.height;
 
@@ -2057,12 +2057,18 @@
                             // 绘制图片
                             ctx.drawImage(img, 0, 0, width, height);
 
-                            // 转换为 Base64（JPEG 格式，质量 0.75）
+                            // 转换为 Base64（JPEG 格式，质量 0.6 更小）
                             const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
 
                             // 检查压缩后大小
                             const compressedSize = compressedDataUrl.length;
-                            console.log(`图片压缩完成: ${(file.size / 1024).toFixed(2)}KB -> ${(compressedSize / 1024).toFixed(2)}KB`);
+                            const compressionRatio = ((1 - compressedSize / file.size) * 100).toFixed(1);
+                            console.log(`图片压缩完成: ${(file.size / 1024).toFixed(2)}KB -> ${(compressedSize / 1024).toFixed(2)}KB (压缩率: ${compressionRatio}%)`);
+
+                            // 如果压缩后仍然很大（超过200KB），警告用户
+                            if (compressedSize > 200 * 1024) {
+                                console.warn(`压缩后图片仍较大: ${(compressedSize / 1024).toFixed(2)}KB`);
+                            }
 
                             resolve(compressedDataUrl);
                         } catch (error) {
@@ -2089,8 +2095,8 @@
             previewImg.src = '';
             previewImg.alt = '正在处理图片...';
 
-            // 压缩图片
-            compressImage(file, 800, 0.75)
+            // 压缩图片（更激进的参数：600px, 0.6质量）
+            compressImage(file, 600, 0.6)
                 .then(compressedDataUrl => {
                     currentCardImage = compressedDataUrl;
                     previewImg.src = compressedDataUrl;
@@ -2155,10 +2161,13 @@
                     // 根据类型保存到不同的数据结构
                     if (currentCardType === 'shopping') {
                         accountData.shopping.push(card);
+                        if (USE_HYBRID_MODE) newAccountData.shopping.push(card);
                     } else if (currentCardType === 'clothing') {
                         accountData.clothing.push(card);
+                        if (USE_HYBRID_MODE) newAccountData.clothing.push(card);
                     } else if (currentCardType === 'home') {
                         accountData.homeAssets[currentCardLocation].push(card);
+                        if (USE_HYBRID_MODE) newAccountData.homeAssets[currentCardLocation].push(card);
                     }
                 }
 
@@ -3868,6 +3877,18 @@
 
         // 保存数据
         function saveData() {
+            if (USE_CLOUD_MODE) {
+                console.warn('云端模式：数据不会保存，刷新页面后会恢复到 backup.json 的状态');
+                return; // 云端模式不保存
+            }
+
+            if (USE_HYBRID_MODE) {
+                // 混合模式：只保存新数据到 localStorage
+                saveHybridData();
+                return;
+            }
+
+            // 本地模式：保存全部数据
             try {
                 const dataStr = JSON.stringify(accountData);
 
@@ -3893,57 +3914,233 @@
             }
         }
 
-        // 加载数据
-        function loadData() {
-            const saved = localStorage.getItem('accountData');
-            if (saved) {
-                accountData = JSON.parse(saved);
+        // 混合模式：保存新数据
+        function saveHybridData() {
+            try {
+                const dataStr = JSON.stringify(newAccountData);
+                const dataSize = new Blob([dataStr]).size;
+                const dataSizeMB = (dataSize / (1024 * 1024)).toFixed(2);
 
-                // 确保所有数据结构完整性
-                if (!accountData.income) {
-                    accountData.income = [];
-                }
-                if (!accountData.assetSnapshots) {
-                    accountData.assetSnapshots = [];
-                }
-                if (!accountData.expenses) {
-                    accountData.expenses = [];
-                }
-                if (!accountData.shopping) {
-                    accountData.shopping = [];
-                }
-                if (!accountData.clothing) {
-                    accountData.clothing = [];
-                }
-                if (!accountData.homeAssets) {
-                    accountData.homeAssets = {
-                        shenzhen: [],
-                        chongqing: []
-                    };
+                localStorage.setItem('newAccountData', dataStr);
+                console.log(`新数据已保存 (${dataSizeMB}MB) - 混合模式`);
+            } catch (error) {
+                if (error.name === 'QuotaExceededError') {
+                    console.error('localStorage 存储空间已满');
+                    alert('新数据存储空间已满！\n建议：\n1. 导出完整数据\n2. 清空新数据重新开始');
                 } else {
-                    if (!accountData.homeAssets.shenzhen) {
-                        accountData.homeAssets.shenzhen = [];
-                    }
-                    if (!accountData.homeAssets.chongqing) {
-                        accountData.homeAssets.chongqing = [];
-                    }
-                }
-                if (!accountData.travelProjects) {
-                    accountData.travelProjects = [];
-                }
-                if (!accountData.savings) {
-                    accountData.savings = {
-                        "现金": 0,
-                        "工行存钱卡": 0,
-                        "农行消费卡": 0,
-                        "微信": 0,
-                        "支付宝": 0
-                    };
-                }
-                if (!accountData.savingsHistory) {
-                    accountData.savingsHistory = [];
+                    console.error('保存新数据失败:', error);
                 }
             }
+        }
+
+        // 配置：是否使用纯云端模式（不使用 localStorage）
+        const USE_CLOUD_MODE = false; // false=本地模式, true=只读模式
+        const USE_HYBRID_MODE = true;  // true=混合模式：旧数据云端+新数据本地
+
+        // 混合模式：分离的新数据存储
+        let newAccountData = {
+            income: [],
+            assetSnapshots: [],
+            expenses: [],
+            shopping: [],
+            clothing: [],
+            homeAssets: {
+                shenzhen: [],
+                chongqing: []
+            },
+            travelProjects: [],
+            savings: {
+                "现金": 0,
+                "工行存钱卡": 0,
+                "农行消费卡": 0,
+                "微信": 0,
+                "支付宝": 0
+            },
+            savingsHistory: []
+        };
+
+        // 加载数据
+        function loadData() {
+            if (USE_HYBRID_MODE) {
+                // 混合模式：从 backup.json 加载旧数据 + localStorage 加载新数据
+                loadHybridData();
+            } else if (USE_CLOUD_MODE) {
+                // 云端模式：每次都从 backup.json 读取
+                loadFromBackupFile();
+            } else {
+                // 本地模式：优先使用 localStorage
+                const saved = localStorage.getItem('accountData');
+                if (saved) {
+                    accountData = JSON.parse(saved);
+                    ensureDataStructure();
+                } else {
+                    // 如果 localStorage 没有数据，从 backup.json 加载并保存
+                    loadFromBackupFile();
+                }
+            }
+        }
+
+        // 混合模式：加载数据
+        function loadHybridData() {
+            // 1. 先从 localStorage 加载新数据
+            const savedNew = localStorage.getItem('newAccountData');
+            if (savedNew) {
+                newAccountData = JSON.parse(savedNew);
+                console.log('已加载新数据（localStorage）');
+            }
+
+            // 2. 从 backup.json 加载旧数据
+            fetch('./backup.json')
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('没有找到 backup.json，只使用新数据');
+                        accountData = newAccountData;
+                        ensureDataStructure();
+                        renderAllViews();
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(oldData => {
+                    if (oldData) {
+                        console.log('已加载旧数据（backup.json）');
+                        // 3. 合并旧数据和新数据
+                        accountData = mergeAccountData(oldData, newAccountData);
+                        ensureDataStructure();
+                        renderAllViews();
+                    }
+                })
+                .catch(error => {
+                    console.log('加载 backup.json 失败:', error.message);
+                    accountData = newAccountData;
+                    ensureDataStructure();
+                    renderAllViews();
+                });
+        }
+
+        // 合并旧数据和新数据
+        function mergeAccountData(oldData, newData) {
+            const merged = {
+                income: [...(oldData.income || []), ...(newData.income || [])],
+                assetSnapshots: [...(oldData.assetSnapshots || []), ...(newData.assetSnapshots || [])],
+                expenses: [...(oldData.expenses || []), ...(newData.expenses || [])],
+                shopping: [...(oldData.shopping || []), ...(newData.shopping || [])],
+                clothing: [...(oldData.clothing || []), ...(newData.clothing || [])],
+                homeAssets: {
+                    shenzhen: [
+                        ...(oldData.homeAssets?.shenzhen || []),
+                        ...(newData.homeAssets?.shenzhen || [])
+                    ],
+                    chongqing: [
+                        ...(oldData.homeAssets?.chongqing || []),
+                        ...(newData.homeAssets?.chongqing || [])
+                    ]
+                },
+                travelProjects: [...(oldData.travelProjects || []), ...(newData.travelProjects || [])],
+                savings: newData.savings || oldData.savings || {
+                    "现金": 0,
+                    "工行存钱卡": 0,
+                    "农行消费卡": 0,
+                    "微信": 0,
+                    "支付宝": 0
+                },
+                savingsHistory: [...(oldData.savingsHistory || []), ...(newData.savingsHistory || [])]
+            };
+
+            console.log(`合并完成：旧数据 + 新数据 = 总计`);
+            return merged;
+        }
+
+        // 渲染所有视图
+        function renderAllViews() {
+            renderIncome();
+            renderExpenses();
+            renderCards();
+            renderTravelProjects();
+            renderAssetSnapshots();
+        }
+
+        // 确保数据结构完整性
+        function ensureDataStructure() {
+            if (!accountData.income) {
+                accountData.income = [];
+            }
+            if (!accountData.assetSnapshots) {
+                accountData.assetSnapshots = [];
+            }
+            if (!accountData.expenses) {
+                accountData.expenses = [];
+            }
+            if (!accountData.shopping) {
+                accountData.shopping = [];
+            }
+            if (!accountData.clothing) {
+                accountData.clothing = [];
+            }
+            if (!accountData.homeAssets) {
+                accountData.homeAssets = {
+                    shenzhen: [],
+                    chongqing: []
+                };
+            } else {
+                if (!accountData.homeAssets.shenzhen) {
+                    accountData.homeAssets.shenzhen = [];
+                }
+                if (!accountData.homeAssets.chongqing) {
+                    accountData.homeAssets.chongqing = [];
+                }
+            }
+            if (!accountData.travelProjects) {
+                accountData.travelProjects = [];
+            }
+            if (!accountData.savings) {
+                accountData.savings = {
+                    "现金": 0,
+                    "工行存钱卡": 0,
+                    "农行消费卡": 0,
+                    "微信": 0,
+                    "支付宝": 0
+                };
+            }
+            if (!accountData.savingsHistory) {
+                accountData.savingsHistory = [];
+            }
+        }
+
+        // 从同目录的 backup.json 文件加载数据
+        function loadFromBackupFile() {
+            fetch('./backup.json')
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('没有找到 backup.json 文件，使用空数据');
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        console.log('成功从 backup.json 加载数据');
+                        accountData = data;
+                        ensureDataStructure();
+
+                        if (!USE_CLOUD_MODE) {
+                            // 本地模式：保存到 localStorage
+                            saveData();
+                        } else {
+                            console.log('云端模式：数据仅在内存中，不保存到 localStorage');
+                        }
+
+                        // 刷新所有显示
+                        renderIncome();
+                        renderExpenses();
+                        renderCards();
+                        renderTravelProjects();
+                        renderAssetSnapshots();
+                    }
+                })
+                .catch(error => {
+                    console.log('加载 backup.json 失败:', error.message);
+                });
         }
 
         // 导出数据
