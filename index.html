@@ -7,6 +7,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>RUI</title>
     <style>
+        /* 自定义宋体字体 */
+        @font-face {
+            font-family: 'STSong';
+            src: url('STSongMedium.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -760,7 +769,7 @@
             word-break: break-word;
             white-space: pre-wrap;
             text-align: center;
-            font-family: "SimSun", "宋体", serif;
+            font-family: 'STSong', "SimSun", "宋体", serif;
         }
 
         body:not(.dark-mode) .card-description {
@@ -784,7 +793,7 @@
             overflow-wrap: break-word;
             word-break: break-word;
             text-align: center;
-            font-family: "SimSun", "宋体", serif;
+            font-family: 'STSong', "SimSun", "宋体", serif;
         }
 
         @media (max-width: 768px) {
@@ -805,7 +814,7 @@
             overflow-wrap: break-word;
             word-break: break-word;
             text-align: center;
-            font-family: "SimSun", "宋体", serif;
+            font-family: 'STSong', "SimSun", "宋体", serif;
         }
 
         @media (max-width: 768px) {
