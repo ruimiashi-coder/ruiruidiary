@@ -1,0 +1,3514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人记账</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #FFFFFE;
+            --card-bg: #FFFFFF;
+            --primary-color: #4A4A49;
+            --text-dark: #2B2B2B;
+            --text-gray: #808080;
+            --text-light: #BFBFBF;
+            --border-color: #F0F0F0;
+            --delete-color: #4A4A49;
+        }
+
+        body.dark-mode {
+            --bg-color: #222121;
+            --card-bg: #282827;
+            --primary-color: #E5E5E5;
+            --text-dark: #FFFFFF;
+            --text-gray: #B0B0B0;
+            --text-light: #707070;
+            --border-color: #3A3A39;
+            --delete-color: #4A4A49;
+        }
+
+        body {
+            font-family: 'SimSun', '宋体', 'STSong', serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-dark);
+            font-size: 15px;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            position: relative;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .header h1 {
+            color: var(--text-dark);
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: -0.5px;
+            transition: color 0.3s;
+        }
+
+        .data-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s;
+        }
+
+        body:not(.dark-mode) .theme-toggle {
+            background: #FFFFFF;
+        }
+
+        body:not(.dark-mode) .theme-toggle svg {
+            stroke: #000000;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #1A1A1A;
+        }
+
+        body.dark-mode .theme-toggle svg {
+            stroke: #FFFFFF;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: var(--card-bg);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'SF Pro Display', 'Inter', 'Helvetica Neue', 'Segoe UI', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--card-bg);
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #3A3A39;
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-color);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 6px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            overflow-x: auto;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 80px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: var(--card-bg);
+        }
+
+        body.dark-mode .tab.active {
+            color: #222121;
+        }
+
+        .content-section {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            background: var(--card-bg);
+            color: var(--text-dark);
+            font-family: inherit;
+            transition: border-color 0.2s, background-color 0.3s, color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .summary-box {
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .summary-box > div:first-child {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .summary-amount {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: -1px;
+        }
+
+        .list-item {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-date {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            transition: color 0.3s;
+        }
+
+        .list-item-category {
+            font-weight: 500;
+            color: var(--text-dark);
+            transition: color 0.3s;
+        }
+
+        .list-item-amount {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .delete-btn {
+            background: var(--delete-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 14px;
+            background: var(--card-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            padding: 24px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart {
+            position: relative;
+            height: 250px;
+            margin-top: 15px;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .meal-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meal-option {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .meal-option.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        body.dark-mode .meal-option.selected {
+            color: #222121;
+        }
+
+        .expense-subtabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .expense-subtab {
+            padding: 10px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .expense-subtab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        body.dark-mode .expense-subtab.active {
+            color: #222121;
+        }
+
+        .expense-content {
+            display: none;
+        }
+
+        .expense-content.active {
+            display: block;
+        }
+
+        .history-item {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .history-item-content {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 6px;
+            position: relative;
+            transition: transform 0.2s, background-color 0.3s, border-color 0.3s;
+            touch-action: pan-y;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .expense-checkbox {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            transition: all 0.2s;
+        }
+
+        .expense-checkbox.show {
+            display: block;
+        }
+
+        .expense-checkbox.checked {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            position: relative;
+        }
+
+        .expense-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        body.dark-mode .expense-checkbox.checked::after {
+            color: #222121;
+        }
+
+        .expense-item-main {
+            flex: 1;
+        }
+
+        .add-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+
+        .add-button:hover {
+            background: #3A3A39;
+            transform: scale(1.05);
+        }
+
+        .add-button.show {
+            display: flex;
+        }
+
+        .add-button.home-add-btn,
+        .add-button.shopping-add-btn,
+        .add-button.clothing-add-btn {
+            display: none;
+        }
+
+        .home-asset-item {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .home-asset-content {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: transform 0.2s;
+            touch-action: pan-y;
+            border: 1px solid var(--border-color);
+        }
+
+        .home-asset-checkbox {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .home-asset-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: var(--delete-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+        }
+
+        .add-button.home-add-btn.show,
+        .add-button.shopping-add-btn.show,
+        .add-button.clothing-add-btn.show {
+            display: flex;
+        }
+
+        /* 图片卡片样式 - 新设计 */
+        .card-item {
+            position: relative;
+            overflow: visible;
+            margin-bottom: 20px;
+        }
+
+        .card-item-content {
+            background: var(--card-bg);
+            border-radius: 0;
+            padding: 32px 24px 8px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border: none;
+            min-height: 200px;
+        }
+
+        body:not(.dark-mode) .card-item-content {
+            background: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode .card-item-content {
+            background: #333333;
+            box-shadow: none;
+        }
+
+        .card-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            margin-bottom: 20px;
+        }
+
+        .card-image-placeholder {
+            display: none;
+        }
+
+        .card-info {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .card-description {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .card-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .card-actions {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 120px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .card-action-btn {
+            font-size: 13px;
+            color: var(--text-gray);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+
+        .card-action-btn:hover {
+            color: var(--text-dark);
+        }
+
+        .card-action-btn.delete {
+            color: var(--text-gray);
+        }
+
+        .card-action-btn.delete:hover {
+            color: var(--text-dark);
+        }
+
+        .card-select-indicator {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--text-light);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--card-bg);
+            transition: all 0.2s;
+        }
+
+        .card-select-indicator.visible {
+            display: flex;
+        }
+
+        .card-select-indicator.selected {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .card-select-indicator.selected::after {
+            content: '✓';
+            color: var(--card-bg);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 卡片详情弹窗 */
+        .card-detail-modal .modal-content {
+            max-width: 500px;
+        }
+
+        .card-detail-image {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 24px;
+            display: block;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-detail-amount {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .card-detail-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .card-detail-description {
+            text-align: center;
+            font-size: 15px;
+            color: var(--text-gray);
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+
+        .add-button.show {
+            display: flex;
+        }
+
+        .add-button:hover {
+            background: #3A3A39;
+            transform: scale(1.05);
+        }
+
+        .travel-project-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .travel-project-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .travel-project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .travel-project-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .travel-project-total {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .travel-record-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .travel-record-item input[type="text"] {
+            flex: 2;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .travel-record-item input[type="number"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .travel-section {
+            background: var(--bg-color);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .travel-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .travel-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .travel-section-total {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .add-record-btn {
+            background: var(--bg-color);
+            border: 2px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-gray);
+            margin-top: 10px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .add-record-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .travel-display-item {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .travel-display-content {
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            transition: transform 0.2s;
+            touch-action: pan-y;
+            border: 1px solid var(--border-color);
+        }
+
+        .travel-display-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: var(--delete-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            color: var(--text-dark);
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            font-size: 28px;
+            color: var(--text-light);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .history-item-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: var(--delete-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .header {
+                padding: 24px 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .tab {
+                font-size: 14px;
+                padding: 10px 12px;
+                min-width: 70px;
+            }
+
+            .content-section {
+                padding: 20px 16px;
+            }
+
+            .modal-content {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>个人记账本</h1>
+            <div class="data-controls">
+                <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="moon-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-icon btn-primary" onclick="exportData()" title="导出数据">↓</button>
+                <button class="btn btn-icon btn-secondary" onclick="document.getElementById('import-file').click()" title="导入数据">↑</button>
+                <input type="file" id="import-file" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('savings')">存款</button>
+            <button class="tab" onclick="switchTab('expense')">支出</button>
+            <button class="tab" onclick="switchTab('income')">收入</button>
+        </div>
+
+        <!-- 收入部分 -->
+        <div id="income-section" class="content-section">
+            <h2 style="color: var(--purple-soft); margin-bottom: 20px;">收入记录</h2>
+
+            <div class="summary-box">
+                <div>总收入</div>
+                <div class="summary-amount" id="income-total">¥0.00</div>
+            </div>
+
+            <h3 style="color: var(--purple-soft); margin: 20px 0 10px 0;">收入明细</h3>
+            <div id="income-records-list"></div>
+
+            <button class="add-button income-add-btn" onclick="openIncomeModal()">+</button>
+        </div>
+
+        <!-- 添加收入弹窗 -->
+        <div id="income-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>添加收入记录</h3>
+                    <button class="modal-close" onclick="closeIncomeModal()">&times;</button>
+                </div>
+
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="modal-income-date" value="">
+                </div>
+
+                <div class="form-group">
+                    <label>类别</label>
+                    <input type="text" id="modal-income-category">
+                </div>
+
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="modal-income-amount" step="0.01">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="saveIncomeFromModal()">保存</button>
+            </div>
+        </div>
+
+        <!-- 存款部分 -->
+        <div id="savings-section" class="content-section active">
+            <h2 style="color: var(--purple-soft); margin-bottom: 20px;">资产记录</h2>
+
+            <div class="summary-box">
+                <div>当前资产总金额</div>
+                <div class="summary-amount" id="assets-total">¥0.00</div>
+            </div>
+
+            <div class="summary-box" style="margin-top: -10px;">
+                <div>当前待售资产预估值</div>
+                <div class="summary-amount" id="pending-assets-total">¥0.00</div>
+            </div>
+
+            <h3 style="color: var(--purple-soft); margin: 20px 0 10px 0;">历史记录</h3>
+            <div id="asset-snapshots-list"></div>
+
+            <button class="add-button show" onclick="openAssetSnapshotModal()">+</button>
+        </div>
+
+        <!-- 添加资产快照弹窗 -->
+        <div id="asset-snapshot-modal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>添加资产记录</h3>
+                    <button class="modal-close" onclick="closeAssetSnapshotModal()">&times;</button>
+                </div>
+
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="modal-snapshot-date" value="">
+                </div>
+
+                <h4 style="color: var(--purple-soft); margin: 20px 0 10px 0; font-size: 16px;">资产账户</h4>
+
+                <div class="form-group">
+                    <label>工行存钱卡</label>
+                    <input type="number" id="modal-icbc" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>农行消费卡</label>
+                    <input type="number" id="modal-abc" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>微信</label>
+                    <input type="number" id="modal-wechat" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>支付宝</label>
+                    <input type="number" id="modal-alipay" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>现金</label>
+                    <input type="number" id="modal-cash" step="0.01" value="0">
+                </div>
+
+                <h4 style="color: var(--purple-soft); margin: 20px 0 10px 0; font-size: 16px;">待售资产</h4>
+
+                <div id="pending-assets-form">
+                    <!-- 待售资产输入项将动态添加 -->
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 15px;" onclick="addPendingAssetInput()">+ 添加待售资产</button>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="saveAssetSnapshot()">保存</button>
+            </div>
+        </div>
+
+        <!-- 资产详情弹窗 -->
+        <div id="asset-detail-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="asset-detail-title">资产详情</h3>
+                    <button class="modal-close" onclick="closeAssetDetailModal()">&times;</button>
+                </div>
+
+                <div id="asset-detail-content"></div>
+
+                <button class="btn" onclick="deleteAssetSnapshotFromDetail()" style="width: 100%; margin-top: 15px; background: var(--delete-color); color: white;">删除</button>
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="closeAssetDetailModal()">关闭</button>
+            </div>
+        </div>
+
+        <!-- 旅行项目详情弹窗 -->
+        <div id="travel-project-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="travel-project-modal-title">旅行项目</h3>
+                    <button class="modal-close" onclick="closeTravelProjectModal()">&times;</button>
+                </div>
+
+                <div id="travel-project-detail"></div>
+            </div>
+        </div>
+
+        <!-- 支出部分 -->
+        <div id="expense-section" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--text-dark); margin: 0;">支出记录</h2>
+                <button class="btn btn-secondary" onclick="toggleSelectionMode()" id="selection-mode-btn">选择</button>
+            </div>
+
+            <!-- 多选统计显示 -->
+            <div id="selection-summary" style="display: none; background: var(--bg-color); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                <div style="font-size: 14px; color: var(--text-gray); margin-bottom: 4px;">已选择金额</div>
+                <div style="font-size: 28px; font-weight: 600; color: var(--text-dark);" id="selected-total">¥0.00</div>
+            </div>
+
+            <div class="expense-subtabs">
+                <div class="expense-subtab active" onclick="switchExpenseTab('food')">吃饭</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('shopping')">消费</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('clothing')">服饰</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('home')">家居</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('travel')">旅行</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('study')">学习</div>
+                <div class="expense-subtab" onclick="switchExpenseTab('other')">其它</div>
+            </div>
+
+            <!-- 吃饭 -->
+            <div id="expense-food" class="expense-content active">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="food-date">
+                </div>
+
+                <div class="form-group">
+                    <label>用餐时间</label>
+                    <div class="meal-options">
+                        <div class="meal-option" id="meal-breakfast" onclick="toggleMealType('breakfast')">早饭</div>
+                        <div class="meal-option" id="meal-lunch" onclick="toggleMealType('lunch')">午饭</div>
+                        <div class="meal-option" id="meal-dinner" onclick="toggleMealType('dinner')">晚饭</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>菜单</label>
+                    <input type="text" id="food-menu">
+                </div>
+
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="food-amount" step="0.01">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="addFoodExpense()">添加吃饭支出</button>
+
+                <div id="food-list"></div>
+            </div>
+
+            <!-- 消费 -->
+            <div id="expense-shopping" class="expense-content">
+                <div id="shopping-list"></div>
+                <button class="add-button shopping-add-btn" onclick="openCardModal('shopping')">+</button>
+            </div>
+
+            <!-- 服饰 -->
+            <div id="expense-clothing" class="expense-content">
+                <div id="clothing-list"></div>
+                <button class="add-button clothing-add-btn" onclick="openCardModal('clothing')">+</button>
+            </div>
+
+            <!-- 家居 -->
+            <div id="expense-home" class="expense-content">
+                <div class="expense-subtabs" style="margin-bottom: 20px;">
+                    <div class="expense-subtab active" onclick="switchHomeTab('shenzhen')">深圳的家</div>
+                    <div class="expense-subtab" onclick="switchHomeTab('chongqing')">重庆的家</div>
+                </div>
+
+                <!-- 深圳的家 -->
+                <div id="home-shenzhen" class="expense-content active">
+                    <div style="background: rgba(206, 147, 216, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-size: 16px; color: var(--purple-soft);">
+                            深圳的家总投入：<strong id="shenzhen-total">¥0.00</strong>
+                        </div>
+                    </div>
+                    <div id="shenzhen-list"></div>
+                    <button class="add-button home-add-btn show" onclick="openCardModal('home', 'shenzhen')">+</button>
+                </div>
+
+                <!-- 重庆的家 -->
+                <div id="home-chongqing" class="expense-content">
+                    <div style="background: rgba(206, 147, 216, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-size: 16px; color: var(--purple-soft);">
+                            重庆的家总投入：<strong id="chongqing-total">¥0.00</strong>
+                        </div>
+                    </div>
+                    <div id="chongqing-list"></div>
+                    <button class="add-button home-add-btn show" onclick="openCardModal('home', 'chongqing')">+</button>
+                </div>
+            </div>
+
+
+            <!-- 旅行 -->
+            <div id="expense-travel" class="expense-content">
+                <div id="travel-projects-list"></div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="createNewTravelProject()">添加新旅行项目</button>
+            </div>
+
+            <!-- 学习 -->
+            <div id="expense-study" class="expense-content">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="study-date">
+                </div>
+
+                <div class="form-group">
+                    <label>项目</label>
+                    <input type="text" id="study-project">
+                </div>
+
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="study-amount" step="0.01">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="addStudyExpense()">添加学习支出</button>
+
+                <div id="study-list"></div>
+            </div>
+
+            <!-- 其它 -->
+            <div id="expense-other" class="expense-content">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="other-date">
+                </div>
+
+                <div class="form-group">
+                    <label>项目</label>
+                    <input type="text" id="other-project">
+                </div>
+
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="other-amount" step="0.01">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="addOtherExpense()">添加其它支出</button>
+
+                <div id="other-list"></div>
+            </div>
+        </div>
+
+        <!-- 统一卡片添加弹窗 -->
+        <div id="card-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="card-modal-title">添加记录</h3>
+                    <button class="modal-close" onclick="closeCardModal()">&times;</button>
+                </div>
+
+                <div class="form-group">
+                    <label>上传图片</label>
+                    <input type="file" id="card-image-input" accept="image/*" onchange="handleCardImageUpload(event)" style="display: none;">
+                    <button type="button" class="btn" onclick="document.getElementById('card-image-input').click()" style="width: 100%; background: var(--light-gray); color: #666; border: 2px dashed #ddd;">
+                        选择图片
+                    </button>
+                    <div id="card-image-preview" style="margin-top: 10px; text-align: center; display: none;">
+                        <img id="card-preview-img" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" id="card-title" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    <label>详细描述</label>
+                    <textarea id="card-description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical;" placeholder=""></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>金额</label>
+                    <input type="number" id="card-amount" step="0.01" placeholder="0.00">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="saveCard()">保存</button>
+            </div>
+        </div>
+
+        <!-- 卡片详情弹窗 -->
+        <div id="card-detail-modal" class="modal card-detail-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>详情</h3>
+                    <button class="modal-close" onclick="closeCardDetailModal()">&times;</button>
+                </div>
+
+                <img id="detail-image" class="card-detail-image" src="" alt="">
+                <div class="card-detail-amount" id="detail-amount">¥0.00</div>
+                <div class="card-detail-title" id="detail-title"></div>
+                <div class="card-detail-description" id="detail-description"></div>
+
+                <button class="btn" onclick="deleteCardFromDetail()" style="width: 100%; margin-top: 20px; background: #ff4444; color: white;">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储
+        let accountData = {
+            income: [],
+            assetSnapshots: [],  // 资产快照记录数组
+            expenses: [],
+            shopping: [],  // 新增：消费记录
+            clothing: [],  // 新增：服饰记录（独立存储）
+            homeAssets: {
+                shenzhen: [],  // 深圳的家
+                chongqing: []  // 重庆的家
+            },
+            travelProjects: []
+        };
+
+        // 主题切换功能
+        function toggleTheme() {
+            const body = document.body;
+            const isDarkMode = body.classList.toggle('dark-mode');
+
+            // 切换图标
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+
+            if (isDarkMode) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // 页面加载时恢复主题设置
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                document.body.classList.remove('dark-mode');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        // 当前选择的月份
+        let currentDate = new Date();
+        let selectedMealTypes = [];
+        let currentTravelProjectId = null; // 当前打开的旅行项目ID
+        let pendingAssetsCount = 0; // 待售资产输入框计数器
+        let currentViewingSnapshotId = null; // 当前查看的资产快照ID
+        let currentHomeTab = 'shenzhen'; // 当前选择的家庭
+        let selectedHomeAssets = { shenzhen: [], chongqing: [] }; // 选中的家居资产
+        let currentCardType = ''; // 当前卡片类型：shopping, clothing, home
+        let currentCardLocation = ''; // 当前家居位置：shenzhen, chongqing
+        let currentCardImage = ''; // 当前卡片图片base64
+        let currentDetailCardId = null; // 当前详情卡片ID
+        let currentDetailCardType = ''; // 当前详情卡片类型
+        let currentDetailCardLocation = ''; // 当前详情卡片位置
+        let currentEditingCardId = null; // 当前正在编辑的卡片ID
+
+        // 多选统计相关变量
+        let isSelectionMode = false;
+        let selectedExpenseIds = [];
+        let selectedCardIds = {
+            shopping: [],
+            clothing: [],
+            home: { shenzhen: [], chongqing: [] }
+        };
+        let selectedTravelIds = [];
+
+        // 滑动删除相关变量
+        let touchStartX = 0;
+        let touchCurrentX = 0;
+        let isSwiping = false;
+
+        // 初始化
+        // 初始化服饰月份选择器
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme(); // 加载主题设置
+            loadData();
+            renderIncome();
+            renderAssetSnapshots();
+            renderExpenses();
+            renderCards(); // 渲染所有卡片（消费、服饰、家居）
+            renderTravelProjects();
+            autoDetectMealTime(); // 自动判断用餐时间
+            setDefaultDates(); // 设置默认日期
+        });
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            const incomeDate = document.getElementById('modal-income-date');
+            const foodDate = document.getElementById('food-date');
+            const studyDate = document.getElementById('study-date');
+            const otherDate = document.getElementById('other-date');
+
+            if (incomeDate) incomeDate.value = today;
+            if (foodDate) foodDate.value = today;
+            if (studyDate) studyDate.value = today;
+            if (otherDate) otherDate.value = today;
+        }
+
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-section`).classList.add('active');
+
+            // 控制添加按钮的显示
+            const savingsAddButton = document.querySelector('.add-button:not(.income-add-btn)');
+            const incomeAddButton = document.querySelector('.income-add-btn');
+
+            if (tab === 'savings') {
+                savingsAddButton.classList.add('show');
+                incomeAddButton.classList.remove('show');
+            } else if (tab === 'income') {
+                savingsAddButton.classList.remove('show');
+                incomeAddButton.classList.add('show');
+            } else {
+                savingsAddButton.classList.remove('show');
+                incomeAddButton.classList.remove('show');
+            }
+        }
+
+        // 切换支出子标签
+        function switchExpenseTab(subtab) {
+            document.querySelectorAll('.expense-subtab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.expense-content').forEach(s => s.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`expense-${subtab}`).classList.add('active');
+
+            // 控制添加按钮的显示
+            const buttons = {
+                'shopping': document.querySelector('.shopping-add-btn'),
+                'clothing': document.querySelector('.clothing-add-btn'),
+                'home': document.querySelectorAll('.home-add-btn')
+            };
+
+            // 隐藏所有按钮
+            Object.values(buttons).forEach(btn => {
+                if (btn) {
+                    if (btn.length) { // NodeList
+                        btn.forEach(b => b.classList.remove('show'));
+                    } else {
+                        btn.classList.remove('show');
+                    }
+                }
+            });
+
+            // 显示对应的按钮
+            if (subtab === 'shopping' && buttons.shopping) {
+                buttons.shopping.classList.add('show');
+            } else if (subtab === 'clothing' && buttons.clothing) {
+                buttons.clothing.classList.add('show');
+            } else if (subtab === 'home' && buttons.home) {
+                buttons.home.forEach(b => b.classList.add('show'));
+            }
+        }
+
+        // 切换用餐类型
+        function toggleMealType(type) {
+            event.target.classList.toggle('selected');
+
+            const mealMap = {
+                'breakfast': '早饭',
+                'lunch': '午饭',
+                'dinner': '晚饭'
+            };
+
+            const mealName = mealMap[type];
+            const index = selectedMealTypes.indexOf(mealName);
+
+            if (index > -1) {
+                selectedMealTypes.splice(index, 1);
+            } else {
+                selectedMealTypes.push(mealName);
+            }
+        }
+
+        // 处理触摸/鼠标开始
+        function handleTouchStart(e, index) {
+            const touch = e.touches ? e.touches[0] : e;
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+            isSwiping = true;
+        }
+
+        // 处理触摸/鼠标移动
+        function handleTouchMove(e, index) {
+            if (!isSwiping) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            touchCurrentX = touch.clientX;
+            const deltaX = touchCurrentX - touchStartX;
+
+            // 只允许向左滑动
+            if (deltaX < 0) {
+                const element = e.currentTarget;
+                element.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+            }
+        }
+
+        // 处理触摸/鼠标结束
+        function handleTouchEnd(e, index) {
+            if (!isSwiping) return;
+
+            const deltaX = touchCurrentX - touchStartX;
+            const element = e.currentTarget;
+
+            // 如果滑动超过40px，保持显示删除按钮
+            if (deltaX < -40) {
+                element.style.transform = 'translateX(-80px)';
+            } else {
+                // 滑动距离不够，恢复位置
+                element.style.transform = 'translateX(0)';
+            }
+
+            isSwiping = false;
+            touchStartX = 0;
+            touchCurrentX = 0;
+        }
+
+        // 删除存款历史记录
+        function deleteSavingsHistory(index) {
+            if (confirm('确定删除这条存款记录吗？')) {
+                // 因为是reverse后的索引，需要转换回实际索引
+                const actualIndex = accountData.savingsHistory.length - 1 - index;
+                accountData.savingsHistory.splice(actualIndex, 1);
+                saveData();
+                renderSavings();
+                renderSavingsChart();
+            }
+        }
+
+        // 添加吃饭支出
+        // 自动判断用餐时间
+        function autoDetectMealTime() {
+            const hour = new Date().getHours();
+
+            // 清空之前的选择
+            selectedMealTypes = [];
+            document.querySelectorAll('.meal-option').forEach(opt => opt.classList.remove('selected'));
+
+            let mealType = '';
+            if (hour >= 0 && hour < 10) {
+                mealType = 'breakfast';
+            } else if (hour >= 10 && hour < 16) {
+                mealType = 'lunch';
+            } else {
+                mealType = 'dinner';
+            }
+
+            const mealMap = {
+                'breakfast': '早饭',
+                'lunch': '午饭',
+                'dinner': '晚饭'
+            };
+
+            // 自动选择对应的用餐时间
+            selectedMealTypes.push(mealMap[mealType]);
+            const element = document.getElementById(`meal-${mealType}`);
+            if (element) {
+                element.classList.add('selected');
+            }
+        }
+
+        function addFoodExpense() {
+            const date = document.getElementById('food-date').value;
+            const menu = document.getElementById('food-menu').value;
+            const amount = parseFloat(document.getElementById('food-amount').value);
+
+            if (!date) {
+                alert('请选择日期');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                alert('请输入金额');
+                return;
+            }
+
+            if (selectedMealTypes.length === 0) {
+                alert('请选择用餐时间（早饭/午饭/晚饭）');
+                return;
+            }
+
+            const mealTime = selectedMealTypes.join('、');
+
+            accountData.expenses.push({
+                id: Date.now(),
+                date,
+                time: mealTime,
+                amount,
+                category: '吃饭',
+                subcategory: '',
+                note: menu || ''
+            });
+
+            document.getElementById('food-amount').value = '';
+            document.getElementById('food-menu').value = '';
+
+            // 重置日期为今天
+            setDefaultDates();
+
+            // 重新自动判断用餐时间（为下次记录做准备）
+            autoDetectMealTime();
+
+            saveData();
+            renderExpenses();
+        }
+
+        // ========== 统一卡片管理函数 ==========
+
+        // 打开卡片添加弹窗
+        function openCardModal(type, location = '') {
+            currentCardType = type;
+            currentCardLocation = location;
+            currentCardImage = '';
+            currentEditingCardId = null; // 重置编辑ID
+
+            // 设置标题
+            const titles = {
+                'shopping': '添加消费记录',
+                'clothing': '添加服饰记录',
+                'home': location === 'shenzhen' ? '添加家居投入 - 深圳的家' : '添加家居投入 - 重庆的家'
+            };
+            document.getElementById('card-modal-title').textContent = titles[type];
+
+            // 清空表单
+            document.getElementById('card-image-input').value = '';
+            document.getElementById('card-image-preview').style.display = 'none';
+            document.getElementById('card-title').value = '';
+            document.getElementById('card-description').value = '';
+            document.getElementById('card-amount').value = '';
+
+            document.getElementById('card-modal').classList.add('active');
+        }
+
+        // 关闭卡片添加弹窗
+        function closeCardModal() {
+            document.getElementById('card-modal').classList.remove('active');
+        }
+
+        // 处理图片上传
+        function handleCardImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentCardImage = e.target.result;
+                document.getElementById('card-preview-img').src = currentCardImage;
+                document.getElementById('card-image-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 保存卡片
+        function saveCard() {
+            const title = document.getElementById('card-title').value.trim();
+            const description = document.getElementById('card-description').value.trim();
+            const amount = parseFloat(document.getElementById('card-amount').value);
+
+            if (!title || !amount || amount <= 0) {
+                alert('请填写标题和金额');
+                return;
+            }
+
+            // 如果是编辑模式
+            if (currentEditingCardId) {
+                let card;
+                if (currentCardType === 'home') {
+                    card = accountData.homeAssets[currentCardLocation].find(c => c.id === currentEditingCardId);
+                } else {
+                    const dataKey = currentCardType === 'shopping' ? 'shopping' : 'clothing';
+                    card = accountData[dataKey].find(c => c.id === currentEditingCardId);
+                }
+
+                if (card) {
+                    card.title = title;
+                    card.description = description;
+                    card.amount = amount;
+                    if (currentCardImage) {
+                        card.image = currentCardImage;
+                    }
+                }
+            } else {
+                // 新增模式
+                const card = {
+                    id: Date.now(),
+                    image: currentCardImage,
+                    title,
+                    description,
+                    amount,
+                    date: new Date().toISOString().split('T')[0]
+                };
+
+                // 根据类型保存到不同的数据结构
+                if (currentCardType === 'shopping') {
+                    accountData.shopping.push(card);
+                } else if (currentCardType === 'clothing') {
+                    accountData.clothing.push(card);
+                } else if (currentCardType === 'home') {
+                    accountData.homeAssets[currentCardLocation].push(card);
+                }
+            }
+
+            saveData();
+            renderCards();
+            closeCardModal();
+        }
+
+        // 渲染所有卡片
+        function renderCards() {
+            renderCardList('shopping', accountData.shopping, 'shopping-list');
+            renderCardList('clothing', accountData.clothing, 'clothing-list');
+            renderHomeCards();
+        }
+
+        // 渲染单个类型的卡片列表
+        function renderCardList(type, cards, containerId) {
+            const container = document.getElementById(containerId);
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 20px 0;">暂无记录</p>';
+                return;
+            }
+
+            // 按日期倒序排列
+            const sortedCards = [...cards].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = sortedCards.map(card => {
+                const isSelected = isCardSelected(type, card.id);
+                return `
+                    <div class="card-item" data-card-id="${card.id}">
+                        <div class="card-item-content">
+                            <div class="card-select-indicator ${isSelectionMode ? 'visible' : ''} ${isSelected ? 'selected' : ''}"
+                                 onclick="toggleCardSelection('${type}', ${card.id}, event)"></div>
+                            ${card.image ? `<img src="${card.image}" class="card-image" alt="${card.title}">` : ''}
+                            <div class="card-info">
+                                ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
+                                <div class="card-title">${card.title}</div>
+                            </div>
+                            <div class="card-amount">¥${card.amount.toFixed(2)}</div>
+                            <div class="card-actions">
+                                <button class="card-action-btn" onclick="editCard('${type}', ${card.id}, event)">编辑</button>
+                                <button class="card-action-btn delete" onclick="deleteCard('${type}', ${card.id}, event)">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 渲染家居卡片
+        function renderHomeCards() {
+            ['shenzhen', 'chongqing'].forEach(location => {
+                const cards = accountData.homeAssets[location];
+                const container = document.getElementById(`${location}-list`);
+
+                // 计算总投入
+                const total = cards.reduce((sum, item) => sum + item.amount, 0);
+                document.getElementById(`${location}-total`).textContent = `¥${total.toFixed(2)}`;
+
+                if (!cards || cards.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 20px 0;">暂无记录</p>';
+                    return;
+                }
+
+                // 按日期倒序排列
+                const sortedCards = [...cards].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                container.innerHTML = sortedCards.map(card => {
+                    const isSelected = selectedCardIds.home && selectedCardIds.home[location] && selectedCardIds.home[location].includes(card.id);
+                    return `
+                        <div class="card-item" data-card-id="${card.id}">
+                            <div class="card-item-content">
+                                <div class="card-select-indicator ${isSelectionMode ? 'visible' : ''} ${isSelected ? 'selected' : ''}"
+                                     onclick="toggleCardSelection('home', ${card.id}, event, '${location}')"></div>
+                                ${card.image ? `<img src="${card.image}" class="card-image" alt="${card.title}">` : ''}
+                                <div class="card-info">
+                                    ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
+                                    <div class="card-title">${card.title}</div>
+                                </div>
+                                <div class="card-amount">¥${card.amount.toFixed(2)}</div>
+                                <div class="card-actions">
+                                    <button class="card-action-btn" onclick="editCard('home', ${card.id}, event, '${location}')">编辑</button>
+                                    <button class="card-action-btn delete" onclick="deleteCard('home', ${card.id}, event, '${location}')">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        // 处理卡片滑动
+
+        // 显示卡片详情
+        function showCardDetail(type, cardId, location = '') {
+            let card;
+            if (type === 'home') {
+                card = accountData.homeAssets[location].find(c => c.id === cardId);
+            } else {
+                const dataKey = type === 'shopping' ? 'shopping' : 'clothing';
+                card = accountData[dataKey].find(c => c.id === cardId);
+            }
+
+            if (!card) return;
+
+            // 保存当前卡片信息以便删除
+            currentDetailCardId = cardId;
+            currentDetailCardType = type;
+            currentDetailCardLocation = location;
+
+            document.getElementById('detail-image').src = card.image || '';
+            document.getElementById('detail-image').style.display = card.image ? 'block' : 'none';
+            document.getElementById('detail-amount').textContent = `¥${card.amount.toFixed(2)}`;
+            document.getElementById('detail-title').textContent = card.title;
+            document.getElementById('detail-description').textContent = card.description || '';
+
+            document.getElementById('card-detail-modal').classList.add('active');
+        }
+
+        // 关闭卡片详情弹窗
+        function closeCardDetailModal() {
+            document.getElementById('card-detail-modal').classList.remove('active');
+            currentDetailCardId = null;
+            currentDetailCardType = '';
+            currentDetailCardLocation = '';
+        }
+
+        // 从详情弹窗删除卡片
+        function deleteCardFromDetail() {
+            if (!currentDetailCardId) return;
+
+            if (!confirm('确定删除这条记录吗？')) {
+                return;
+            }
+
+            if (currentDetailCardType === 'home') {
+                accountData.homeAssets[currentDetailCardLocation] = accountData.homeAssets[currentDetailCardLocation].filter(c => c.id !== currentDetailCardId);
+            } else {
+                const dataKey = currentDetailCardType === 'shopping' ? 'shopping' : 'clothing';
+                accountData[dataKey] = accountData[dataKey].filter(c => c.id !== currentDetailCardId);
+            }
+
+            saveData();
+            renderCards();
+            closeCardDetailModal();
+        }
+
+        // 删除卡片
+        function deleteCard(type, cardId, event, location = '') {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            if (!confirm('确定删除这条记录吗？')) {
+                return;
+            }
+
+            if (type === 'home') {
+                accountData.homeAssets[location] = accountData.homeAssets[location].filter(c => c.id !== cardId);
+            } else {
+                const dataKey = type === 'shopping' ? 'shopping' : 'clothing';
+                accountData[dataKey] = accountData[dataKey].filter(c => c.id !== cardId);
+            }
+
+            saveData();
+            renderCards();
+        }
+
+        // 编辑卡片
+        function editCard(type, cardId, event, location = '') {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            // 找到卡片数据
+            let card;
+            if (type === 'home') {
+                card = accountData.homeAssets[location].find(c => c.id === cardId);
+            } else {
+                const dataKey = type === 'shopping' ? 'shopping' : 'clothing';
+                card = accountData[dataKey].find(c => c.id === cardId);
+            }
+
+            if (!card) return;
+
+            // 设置标题
+            const titles = {
+                'shopping': '编辑消费记录',
+                'clothing': '编辑服饰记录',
+                'home': location === 'shenzhen' ? '编辑家居投入 - 深圳的家' : '编辑家居投入 - 重庆的家'
+            };
+            document.getElementById('card-modal-title').textContent = titles[type];
+
+            // 打开编辑弹窗，预填充数据
+            currentCardType = type;
+            currentCardLocation = location;
+            currentEditingCardId = cardId;
+
+            document.getElementById('card-title').value = card.title;
+            document.getElementById('card-description').value = card.description || '';
+            document.getElementById('card-amount').value = card.amount;
+            currentCardImage = card.image || '';
+
+            if (card.image) {
+                document.getElementById('card-preview-img').src = card.image;
+                document.getElementById('card-image-preview').style.display = 'block';
+            } else {
+                document.getElementById('card-image-preview').style.display = 'none';
+            }
+
+            document.getElementById('card-modal').classList.add('active');
+        }
+
+        // 检查卡片是否被选中
+        function isCardSelected(type, cardId) {
+            if (type === 'shopping') {
+                return selectedCardIds.shopping && selectedCardIds.shopping.includes(cardId);
+            } else if (type === 'clothing') {
+                return selectedCardIds.clothing && selectedCardIds.clothing.includes(cardId);
+            }
+            return false;
+        }
+
+        // ========== 家居资产管理函数 ==========
+
+        // 切换家庭标签
+        function switchHomeTab(home) {
+            currentHomeTab = home;
+
+            // 切换标签样式
+            const tabs = document.querySelectorAll('#expense-home .expense-subtab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换内容
+            document.getElementById('home-shenzhen').classList.remove('active');
+            document.getElementById('home-chongqing').classList.remove('active');
+            document.getElementById(`home-${home}`).classList.add('active');
+        }
+
+
+        // 旧函数兼容
+        function addHomeExpense() {
+            // 已废弃，保留避免报错
+        }
+
+        // 添加服饰支出
+
+        // 添加旅行支出 - 已删除，使用新的旅行项目管理
+
+        // 创建新旅行项目
+        function createNewTravelProject() {
+            const projectName = prompt('旅行项目名称');
+
+            if (!projectName || projectName.trim() === '') {
+                return;
+            }
+
+            const newProject = {
+                id: Date.now(),
+                name: projectName.trim(),
+                transportation: [], // 交通记录
+                accommodation: []   // 住宿记录
+            };
+
+            accountData.travelProjects.push(newProject);
+            saveData();
+            renderTravelProjects();
+        }
+
+        // 渲染旅行项目列表
+        function renderTravelProjects() {
+            const container = document.getElementById('travel-projects-list');
+
+            if (accountData.travelProjects.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">暂无旅行项目<br>点击下方按钮创建新项目</p>';
+                return;
+            }
+
+            container.innerHTML = accountData.travelProjects.map(project => {
+                const transportTotal = project.transportation.reduce((sum, item) => sum + (item.amount || 0), 0);
+                const accommodationTotal = project.accommodation.reduce((sum, item) => sum + (item.amount || 0), 0);
+                const totalAmount = transportTotal + accommodationTotal;
+
+                return `
+                    <div class="travel-project-card" data-travel-id="${project.id}" style="position: relative;">
+                        <div style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 10;">
+                            <div class="expense-checkbox" onclick="toggleTravelSelection(${project.id}, event)"></div>
+                        </div>
+                        <div onclick="openTravelProject(${project.id})" style="padding-left: ${isSelectionMode ? '36px' : '0'};">
+                            <div class="travel-project-header">
+                                <div class="travel-project-name">${project.name}</div>
+                                <div class="travel-project-total">¥${totalAmount.toFixed(2)}</div>
+                            </div>
+                            <div style="font-size: 13px; color: #666;">
+                                <span>交通: ¥${transportTotal.toFixed(2)}</span>
+                                <span style="margin-left: 15px;">住宿: ¥${accommodationTotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 如果处于选择模式，显示复选框
+            if (isSelectionMode) {
+                const checkboxes = container.querySelectorAll('.expense-checkbox');
+                checkboxes.forEach(cb => cb.classList.add('show'));
+            }
+        }
+
+        // 切换旅行项目选择状态
+        function toggleTravelSelection(projectId, event) {
+            if (!isSelectionMode) return;
+
+            event.stopPropagation();
+
+            const index = selectedTravelIds.indexOf(projectId);
+            const checkbox = event.target;
+
+            if (index > -1) {
+                selectedTravelIds.splice(index, 1);
+                checkbox.classList.remove('checked');
+            } else {
+                selectedTravelIds.push(projectId);
+                checkbox.classList.add('checked');
+            }
+
+            updateSelectedTotal();
+        }
+
+        // 打开旅行项目详情
+        function openTravelProject(projectId) {
+            currentTravelProjectId = projectId;
+            const project = accountData.travelProjects.find(p => p.id === projectId);
+
+            if (!project) return;
+
+            document.getElementById('travel-project-modal-title').textContent = project.name;
+            renderTravelProjectDetail(project);
+            document.getElementById('travel-project-modal').classList.add('active');
+        }
+
+        // 关闭旅行项目弹窗
+        function closeTravelProjectModal() {
+            document.getElementById('travel-project-modal').classList.remove('active');
+            currentTravelProjectId = null;
+            renderTravelProjects(); // 刷新列表
+        }
+
+        // 渲染旅行项目详情
+        function renderTravelProjectDetail(project) {
+            const transportTotal = project.transportation.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const accommodationTotal = project.accommodation.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const totalAmount = transportTotal + accommodationTotal;
+
+            const detailContainer = document.getElementById('travel-project-detail');
+
+            detailContainer.innerHTML = `
+                <!-- 交通部分 -->
+                <div class="travel-section">
+                    <div class="travel-section-header">
+                        <div class="travel-section-title">交通</div>
+                        <div class="travel-section-total">¥${transportTotal.toFixed(2)}</div>
+                    </div>
+
+                    <div id="transportation-list">
+                        ${project.transportation.map((item, index) => `
+                            <div class="travel-display-item">
+                                <div class="travel-display-delete" onclick="deleteTravelRecord('transportation', ${index})">删除</div>
+                                <div class="travel-display-content"
+                                     ontouchstart="handleTravelTouchStart(event, 'transportation', ${index})"
+                                     ontouchmove="handleTravelTouchMove(event)"
+                                     ontouchend="handleTravelTouchEnd(event)"
+                                     onmousedown="handleTravelTouchStart(event, 'transportation', ${index})"
+                                     onmousemove="handleTravelTouchMove(event)"
+                                     onmouseup="handleTravelTouchEnd(event)"
+                                     onmouseleave="handleTravelTouchEnd(event)">
+                                    <span>${item.description}</span>
+                                    <span style="font-weight: bold; color: var(--purple-soft);">¥${item.amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="add-record-btn" onclick="showAddRecordForm('transportation')">+ 添加交通记录</div>
+                    <div id="transportation-add-form" style="display: none; margin-top: 10px;">
+                        <div class="travel-record-item">
+                            <input type="text" id="transport-desc">
+                            <input type="number" id="transport-amount" step="0.01">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 5px;" onclick="addTravelRecord('transportation')">保存</button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 5px;" onclick="cancelAddRecord('transportation')">取消</button>
+                    </div>
+                </div>
+
+                <!-- 住宿部分 -->
+                <div class="travel-section">
+                    <div class="travel-section-header">
+                        <div class="travel-section-title">住宿</div>
+                        <div class="travel-section-total">¥${accommodationTotal.toFixed(2)}</div>
+                    </div>
+
+                    <div id="accommodation-list">
+                        ${project.accommodation.map((item, index) => `
+                            <div class="travel-display-item">
+                                <div class="travel-display-delete" onclick="deleteTravelRecord('accommodation', ${index})">删除</div>
+                                <div class="travel-display-content"
+                                     ontouchstart="handleTravelTouchStart(event, 'accommodation', ${index})"
+                                     ontouchmove="handleTravelTouchMove(event)"
+                                     ontouchend="handleTravelTouchEnd(event)"
+                                     onmousedown="handleTravelTouchStart(event, 'accommodation', ${index})"
+                                     onmousemove="handleTravelTouchMove(event)"
+                                     onmouseup="handleTravelTouchEnd(event)"
+                                     onmouseleave="handleTravelTouchEnd(event)">
+                                    <span>${item.description}</span>
+                                    <span style="font-weight: bold; color: var(--purple-soft);">¥${item.amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="add-record-btn" onclick="showAddRecordForm('accommodation')">+ 添加住宿记录</div>
+                    <div id="accommodation-add-form" style="display: none; margin-top: 10px;">
+                        <div class="travel-record-item">
+                            <input type="text" id="accommodation-desc" placeholder="">
+                            <input type="number" id="accommodation-amount" placeholder="金额" step="0.01">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 5px;" onclick="addTravelRecord('accommodation')">保存</button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 5px;" onclick="cancelAddRecord('accommodation')">取消</button>
+                    </div>
+                </div>
+
+                <!-- 总金额 -->
+                <div style="background: rgba(206, 147, 216, 0.1); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px;">
+                    <div style="font-size: 14px; color: var(--purple-soft); margin-bottom: 5px;">旅行总金额</div>
+                    <div style="font-size: 24px; font-weight: bold; color: var(--purple-soft);">¥${totalAmount.toFixed(2)}</div>
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="deleteTravelProject(${project.id})">删除整个项目</button>
+            `;
+        }
+
+        // 显示添加记录表单
+        function showAddRecordForm(type) {
+            document.getElementById(`${type}-add-form`).style.display = 'block';
+        }
+
+        // 取消添加记录
+        function cancelAddRecord(type) {
+            document.getElementById(`${type}-add-form`).style.display = 'none';
+            document.getElementById(`${type === 'transportation' ? 'transport' : 'accommodation'}-desc`).value = '';
+            document.getElementById(`${type === 'transportation' ? 'transport' : 'accommodation'}-amount`).value = '';
+        }
+
+        // 添加旅行记录
+        function addTravelRecord(type) {
+            const project = accountData.travelProjects.find(p => p.id === currentTravelProjectId);
+            if (!project) return;
+
+            const descId = type === 'transportation' ? 'transport-desc' : 'accommodation-desc';
+            const amountId = type === 'transportation' ? 'transport-amount' : 'accommodation-amount';
+
+            const description = document.getElementById(descId).value.trim();
+            const amount = parseFloat(document.getElementById(amountId).value);
+
+            if (!description || !amount || amount <= 0) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            project[type].push({
+                description: description,
+                amount: amount
+            });
+
+            saveData();
+            renderTravelProjectDetail(project);
+        }
+
+        // 处理旅行记录滑动开始
+        function handleTravelTouchStart(e, type, index) {
+            const touch = e.touches ? e.touches[0] : e;
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+            isSwiping = true;
+        }
+
+        // 处理旅行记录滑动移动
+        function handleTravelTouchMove(e) {
+            if (!isSwiping) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            touchCurrentX = touch.clientX;
+            const deltaX = touchCurrentX - touchStartX;
+
+            // 只允许向左滑动
+            if (deltaX < 0) {
+                const element = e.currentTarget;
+                element.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+            }
+        }
+
+        // 处理旅行记录滑动结束
+        function handleTravelTouchEnd(e) {
+            if (!isSwiping) return;
+
+            const deltaX = touchCurrentX - touchStartX;
+            const element = e.currentTarget;
+
+            // 如果滑动超过40px，保持显示删除按钮
+            if (deltaX < -40) {
+                element.style.transform = 'translateX(-80px)';
+            } else {
+                // 滑动距离不够，恢复位置
+                element.style.transform = 'translateX(0)';
+            }
+
+            isSwiping = false;
+            touchStartX = 0;
+            touchCurrentX = 0;
+        }
+
+        // 删除旅行记录
+        function deleteTravelRecord(type, index) {
+            if (!confirm('确定删除这条记录吗？')) {
+                return;
+            }
+
+            const project = accountData.travelProjects.find(p => p.id === currentTravelProjectId);
+            if (!project) return;
+
+            project[type].splice(index, 1);
+            saveData();
+            renderTravelProjectDetail(project);
+        }
+
+        // 删除整个旅行项目
+        function deleteTravelProject(projectId) {
+            if (!confirm('确定删除整个旅行项目吗？\n删除后无法恢复！')) {
+                return;
+            }
+
+            const index = accountData.travelProjects.findIndex(p => p.id === projectId);
+            if (index > -1) {
+                accountData.travelProjects.splice(index, 1);
+                saveData();
+                closeTravelProjectModal();
+            }
+        }
+
+        // 添加学习支出
+        function addStudyExpense() {
+            const date = document.getElementById('study-date').value;
+            const project = document.getElementById('study-project').value;
+            const amount = parseFloat(document.getElementById('study-amount').value);
+
+            if (!date || !amount) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            accountData.expenses.push({
+                id: Date.now(),
+                date,
+                time: '',
+                amount,
+                category: '学习',
+                subcategory: '',
+                note: project || ''
+            });
+
+            document.getElementById('study-amount').value = '';
+            document.getElementById('study-project').value = '';
+
+            // 重置日期为今天
+            setDefaultDates();
+
+            saveData();
+            renderExpenses();
+        }
+
+        // 添加其它支出
+        function addOtherExpense() {
+            const date = document.getElementById('other-date').value;
+            const project = document.getElementById('other-project').value;
+            const amount = parseFloat(document.getElementById('other-amount').value);
+
+            if (!date || !amount) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            accountData.expenses.push({
+                id: Date.now(),
+                date,
+                time: '',
+                amount,
+                category: '其它',
+                subcategory: '',
+                note: project || ''
+            });
+
+            document.getElementById('other-amount').value = '';
+            document.getElementById('other-project').value = '';
+
+            // 重置日期为今天
+            setDefaultDates();
+
+            saveData();
+            renderExpenses();
+        }
+        // 打开添加收入弹窗
+        function openIncomeModal() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('modal-income-date').value = today;
+            document.getElementById('modal-income-category').value = '';
+            document.getElementById('modal-income-amount').value = '';
+            document.getElementById('income-modal').classList.add('active');
+        }
+
+        // 关闭添加收入弹窗
+        function closeIncomeModal() {
+            document.getElementById('income-modal').classList.remove('active');
+        }
+
+        // 从弹窗保存收入记录
+        function saveIncomeFromModal() {
+            const date = document.getElementById('modal-income-date').value;
+            const category = document.getElementById('modal-income-category').value.trim();
+            const amount = parseFloat(document.getElementById('modal-income-amount').value);
+
+            if (!date || !category || !amount || amount <= 0) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            accountData.income.push({
+                id: Date.now(),
+                date,
+                category,
+                amount
+            });
+
+            saveData();
+            renderIncome();
+            closeIncomeModal();
+        }
+
+        // 渲染收入列表
+        function renderIncome() {
+            const container = document.getElementById('income-records-list');
+
+            // 计算总收入（所有收入记录的总和）
+            const total = accountData.income.reduce((sum, item) => sum + item.amount, 0);
+            document.getElementById('income-total').textContent = `¥${total.toFixed(2)}`;
+
+            if (accountData.income.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">暂无收入记录<br>点击右下角 + 按钮添加</p>';
+                return;
+            }
+
+            // 渲染收入记录列表（支持右滑删除）
+            container.innerHTML = accountData.income
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((item, index) => `
+                    <div class="history-item">
+                        <div class="history-item-delete" onclick="deleteIncome(${item.id})">删除</div>
+                        <div class="history-item-content"
+                             ontouchstart="handleIncomeTouchStart(event, ${index})"
+                             ontouchmove="handleIncomeTouchMove(event)"
+                             ontouchend="handleIncomeTouchEnd(event)"
+                             onmousedown="handleIncomeTouchStart(event, ${index})"
+                             onmousemove="handleIncomeTouchMove(event)"
+                             onmouseup="handleIncomeTouchEnd(event)"
+                             onmouseleave="handleIncomeTouchEnd(event)">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <div style="color: var(--text-dark); font-size: 14px; flex-shrink: 0;">${item.date}</div>
+                                <div style="color: var(--text-gray); font-size: 14px; flex: 1; text-align: center; padding: 0 16px;">${item.category}</div>
+                                <div style="font-size: 16px; font-weight: 600; color: var(--text-dark); flex-shrink: 0;">+¥${item.amount.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        // 处理收入记录滑动开始
+        function handleIncomeTouchStart(e, index) {
+            const touch = e.touches ? e.touches[0] : e;
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+            isSwiping = true;
+        }
+
+        // 处理收入记录滑动移动
+        function handleIncomeTouchMove(e) {
+            if (!isSwiping) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            touchCurrentX = touch.clientX;
+            const deltaX = touchCurrentX - touchStartX;
+
+            // 只允许向左滑动
+            if (deltaX < 0) {
+                const element = e.currentTarget;
+                element.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+            }
+        }
+
+        // 处理收入记录滑动结束
+        function handleIncomeTouchEnd(e) {
+            if (!isSwiping) return;
+
+            const deltaX = touchCurrentX - touchStartX;
+            const element = e.currentTarget;
+
+            // 如果滑动超过40px，保持显示删除按钮
+            if (deltaX < -40) {
+                element.style.transform = 'translateX(-80px)';
+            } else {
+                // 滑动距离不够，恢复位置
+                element.style.transform = 'translateX(0)';
+            }
+
+            isSwiping = false;
+            touchStartX = 0;
+            touchCurrentX = 0;
+        }
+
+        // 删除收入记录
+        function deleteIncome(id) {
+            if (!confirm('确定删除这条收入记录吗？')) {
+                return;
+            }
+
+            const index = accountData.income.findIndex(item => item.id === id);
+            if (index > -1) {
+                accountData.income.splice(index, 1);
+                saveData();
+                renderIncome();
+            }
+        }
+
+        // 删除收入
+        function deleteIncome(id) {
+            if (confirm('确定删除这条记录？')) {
+                accountData.income = accountData.income.filter(item => item.id !== id);
+                saveData();
+                renderIncome();
+            }
+        }
+
+        // 打开添加存款弹窗
+        // ========== 资产快照管理函数 ==========
+
+        // 打开添加资产快照弹窗
+        function openAssetSnapshotModal() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('modal-snapshot-date').value = today;
+
+            // 重置所有输入框
+            document.getElementById('modal-icbc').value = '0';
+            document.getElementById('modal-abc').value = '0';
+            document.getElementById('modal-wechat').value = '0';
+            document.getElementById('modal-alipay').value = '0';
+            document.getElementById('modal-cash').value = '0';
+
+            // 清空待售资产
+            document.getElementById('pending-assets-form').innerHTML = '';
+            pendingAssetsCount = 0;
+
+            document.getElementById('asset-snapshot-modal').classList.add('active');
+        }
+
+        // 关闭添加资产快照弹窗
+        function closeAssetSnapshotModal() {
+            document.getElementById('asset-snapshot-modal').classList.remove('active');
+        }
+
+        // 添加待售资产输入框
+        function addPendingAssetInput() {
+            const container = document.getElementById('pending-assets-form');
+            const id = pendingAssetsCount++;
+
+            const inputHtml = `
+                <div class="travel-record-item" id="pending-asset-${id}" style="margin-bottom: 10px;">
+                    <input type="text" id="pending-name-${id}" style="flex: 2;">
+                    <input type="number" id="pending-value-${id}" step="0.01" style="flex: 1;" value="0">
+                    <button class="btn btn-secondary" style="padding: 10px; width: 50px;" onclick="removePendingAssetInput(${id})">删除</button>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', inputHtml);
+        }
+
+        // 删除待售资产输入框
+        function removePendingAssetInput(id) {
+            const element = document.getElementById(`pending-asset-${id}`);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        // 保存资产快照
+        function saveAssetSnapshot() {
+            const date = document.getElementById('modal-snapshot-date').value;
+            const icbc = parseFloat(document.getElementById('modal-icbc').value) || 0;
+            const abc = parseFloat(document.getElementById('modal-abc').value) || 0;
+            const wechat = parseFloat(document.getElementById('modal-wechat').value) || 0;
+            const alipay = parseFloat(document.getElementById('modal-alipay').value) || 0;
+            const cash = parseFloat(document.getElementById('modal-cash').value) || 0;
+
+            if (!date) {
+                alert('请选择日期');
+                return;
+            }
+
+            // 收集待售资产
+            const pendingAssets = [];
+            for (let i = 0; i < pendingAssetsCount; i++) {
+                const nameInput = document.getElementById(`pending-name-${i}`);
+                const valueInput = document.getElementById(`pending-value-${i}`);
+
+                if (nameInput && valueInput) {
+                    const name = nameInput.value.trim();
+                    const value = parseFloat(valueInput.value) || 0;
+
+                    if (name && value > 0) {
+                        pendingAssets.push({ name, value });
+                    }
+                }
+            }
+
+            // 计算总额
+            const assetsTotal = icbc + abc + wechat + alipay + cash;
+            const pendingTotal = pendingAssets.reduce((sum, item) => sum + item.value, 0);
+
+            // 创建快照记录
+            const snapshot = {
+                id: Date.now(),
+                date,
+                icbc,
+                abc,
+                wechat,
+                alipay,
+                cash,
+                assetsTotal,
+                pendingAssets,
+                pendingTotal
+            };
+
+            accountData.assetSnapshots.push(snapshot);
+
+            // 按日期排序
+            accountData.assetSnapshots.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            saveData();
+            renderAssetSnapshots();
+            closeAssetSnapshotModal();
+        }
+
+        // 渲染资产快照列表
+        function renderAssetSnapshots() {
+            const container = document.getElementById('asset-snapshots-list');
+
+            // 更新顶部统计
+            if (accountData.assetSnapshots.length > 0) {
+                const latest = accountData.assetSnapshots[0];
+                document.getElementById('assets-total').textContent = `¥${latest.assetsTotal.toFixed(2)}`;
+                document.getElementById('pending-assets-total').textContent = `¥${latest.pendingTotal.toFixed(2)}`;
+            } else {
+                document.getElementById('assets-total').textContent = '¥0.00';
+                document.getElementById('pending-assets-total').textContent = '¥0.00';
+            }
+
+            // 渲染列表
+            if (accountData.assetSnapshots.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">暂无资产记录<br>点击右下角 + 按钮添加</p>';
+                return;
+            }
+
+            container.innerHTML = accountData.assetSnapshots.map((snapshot, index) => `
+                <div class="history-item">
+                    <div class="history-item-content" onclick="viewAssetSnapshotDetail(${snapshot.id})" style="cursor: pointer;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 12px;">
+                            <div style="color: var(--text-dark); font-size: 14px; flex-shrink: 0; padding-top: 2px;">${snapshot.date}</div>
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: var(--text-gray); font-size: 14px;">资产总金额</span>
+                                    <span style="font-size: 16px; font-weight: 600; color: var(--text-dark);">¥${snapshot.assetsTotal.toFixed(2)}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: var(--text-light); font-size: 14px;">待售资产估值</span>
+                                    <span style="font-size: 16px; font-weight: 600; color: var(--text-light);">¥${snapshot.pendingTotal.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 查看资产快照详情
+        function viewAssetSnapshotDetail(id) {
+            const snapshot = accountData.assetSnapshots.find(s => s.id === id);
+            if (!snapshot) return;
+
+            currentViewingSnapshotId = id;
+
+            document.getElementById('asset-detail-title').textContent = `资产详情 - ${snapshot.date}`;
+
+            const detailHtml = `
+                <div style="background: rgba(206, 147, 216, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <h4 style="color: var(--purple-soft); margin-bottom: 10px;">资产账户</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+                        <div>工行存钱卡：<strong>¥${snapshot.icbc.toFixed(2)}</strong></div>
+                        <div>农行消费卡：<strong>¥${snapshot.abc.toFixed(2)}</strong></div>
+                        <div>微信：<strong>¥${snapshot.wechat.toFixed(2)}</strong></div>
+                        <div>支付宝：<strong>¥${snapshot.alipay.toFixed(2)}</strong></div>
+                        <div>现金：<strong>¥${snapshot.cash.toFixed(2)}</strong></div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid rgba(206, 147, 216, 0.3); font-size: 16px;">
+                        资产总金额：<strong style="color: var(--purple-soft);">¥${snapshot.assetsTotal.toFixed(2)}</strong>
+                    </div>
+                </div>
+
+                ${snapshot.pendingAssets.length > 0 ? `
+                    <div style="background: rgba(255, 206, 86, 0.1); padding: 15px; border-radius: 10px;">
+                        <h4 style="color: var(--purple-soft); margin-bottom: 10px;">待售资产</h4>
+                        <div style="font-size: 14px;">
+                            ${snapshot.pendingAssets.map(asset => `
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span>${asset.name}</span>
+                                    <strong>¥${asset.value.toFixed(2)}</strong>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid rgba(255, 206, 86, 0.3); font-size: 16px;">
+                            待售资产估值：<strong style="color: #999;">¥${snapshot.pendingTotal.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                ` : '<p style="text-align: center; color: #999;">无待售资产</p>'}
+            `;
+
+            document.getElementById('asset-detail-content').innerHTML = detailHtml;
+            document.getElementById('asset-detail-modal').classList.add('active');
+        }
+
+        // 关闭资产详情弹窗
+        function closeAssetDetailModal() {
+            document.getElementById('asset-detail-modal').classList.remove('active');
+            currentViewingSnapshotId = null;
+        }
+
+        // 处理资产快照滑动
+
+        // 删除资产快照
+        function deleteAssetSnapshot(id) {
+            if (!confirm('确定删除这条资产记录吗？')) {
+                return;
+            }
+
+            const index = accountData.assetSnapshots.findIndex(s => s.id === id);
+            if (index > -1) {
+                accountData.assetSnapshots.splice(index, 1);
+                saveData();
+                renderAssetSnapshots();
+            }
+        }
+
+        // 从详情弹窗删除资产快照
+        function deleteAssetSnapshotFromDetail() {
+            if (!currentViewingSnapshotId) return;
+
+            if (!confirm('确定删除这条资产记录吗？')) {
+                return;
+            }
+
+            const index = accountData.assetSnapshots.findIndex(s => s.id === currentViewingSnapshotId);
+            if (index > -1) {
+                accountData.assetSnapshots.splice(index, 1);
+                saveData();
+                renderAssetSnapshots();
+                closeAssetDetailModal();
+            }
+        }
+
+        // 旧函数兼容（避免报错）
+        function openAssetsModal() { openAssetSnapshotModal(); }
+        function closeAssetsModal() { closeAssetSnapshotModal(); }
+        function renderAssets() { renderAssetSnapshots(); }
+        function switchAssetTab() {}
+        function saveAssetFromModal() {}
+        function deleteAssetRecord() {}
+        function handleAssetTouchStart() {}
+        function handleAssetTouchMove() {}
+        function handleAssetTouchEnd() {}
+
+        // 更新存款
+        function updateSavings() {
+            const date = document.getElementById('savings-date').value;
+            const cash = parseFloat(document.getElementById('savings-cash').value) || 0;
+            const icbc = parseFloat(document.getElementById('savings-icbc').value) || 0;
+            const abc = parseFloat(document.getElementById('savings-abc').value) || 0;
+            const wechat = parseFloat(document.getElementById('savings-wechat').value) || 0;
+            const alipay = parseFloat(document.getElementById('savings-alipay').value) || 0;
+
+            if (!date) {
+                alert('请选择日期');
+                return;
+            }
+
+            // 更新当前余额
+            accountData.savings["现金"] = cash;
+            accountData.savings["工行存钱卡"] = icbc;
+            accountData.savings["农行消费卡"] = abc;
+            accountData.savings["微信"] = wechat;
+            accountData.savings["支付宝"] = alipay;
+
+            // 计算总额
+            const total = cash + icbc + abc + wechat + alipay;
+
+            // 检查该日期是否已有记录，如果有则更新，没有则添加
+            const existingIndex = accountData.savingsHistory.findIndex(h => h.date === date);
+            if (existingIndex >= 0) {
+                accountData.savingsHistory[existingIndex] = {
+                    date: date,
+                    total: total,
+                    现金: cash,
+                    工行存钱卡: icbc,
+                    农行消费卡: abc,
+                    微信: wechat,
+                    支付宝: alipay
+                };
+            } else {
+                accountData.savingsHistory.push({
+                    date: date,
+                    total: total,
+                    现金: cash,
+                    工行存钱卡: icbc,
+                    农行消费卡: abc,
+                    微信: wechat,
+                    支付宝: alipay
+                });
+            }
+
+            // 按日期排序
+            accountData.savingsHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            saveData();
+            renderSavings();
+            renderSavingsChart();
+
+            alert('存款记录已更新！');
+        }
+
+        // 渲染存款
+        function renderSavings() {
+            const total = Object.values(accountData.savings).reduce((sum, val) => sum + val, 0);
+
+            document.getElementById('savings-total').textContent = `¥${total.toFixed(2)}`;
+
+            // 显示当前各账户余额
+            const currentDisplay = document.getElementById('current-savings-display');
+            currentDisplay.innerHTML = Object.entries(accountData.savings).map(([account, amount]) => `
+                <div class="list-item">
+                    <div class="list-item-category">${account}</div>
+                    <div class="list-item-amount">¥${amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            // 显示历史记录
+            const historyContainer = document.getElementById('savings-history-list');
+            historyContainer.innerHTML = accountData.savingsHistory.length > 0 ?
+                accountData.savingsHistory.slice().reverse().map((record, index) => `
+                    <div class="history-item" id="history-${index}">
+                        <div class="history-item-delete" onclick="deleteSavingsHistory(${index})">删除</div>
+                        <div class="history-item-content"
+                             ontouchstart="handleTouchStart(event, ${index})"
+                             ontouchmove="handleTouchMove(event, ${index})"
+                             ontouchend="handleTouchEnd(event, ${index})"
+                             onmousedown="handleTouchStart(event, ${index})"
+                             onmousemove="handleTouchMove(event, ${index})"
+                             onmouseup="handleTouchEnd(event, ${index})"
+                             onmouseleave="handleTouchEnd(event, ${index})">
+                            <div style="font-weight: bold; color: var(--purple-soft); margin-bottom: 10px;">${record.date}</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
+                                <div>现金: ¥${record.现金.toFixed(2)}</div>
+                                <div>工行: ¥${record.工行存钱卡.toFixed(2)}</div>
+                                <div>农行: ¥${record.农行消费卡.toFixed(2)}</div>
+                                <div>微信: ¥${record.微信.toFixed(2)}</div>
+                                <div>支付宝: ¥${record.支付宝.toFixed(2)}</div>
+                                <div style="grid-column: 1 / -1; font-weight: bold; color: var(--purple-soft); margin-top: 5px;">
+                                    总计: ¥${record.total.toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')
+                : '<p style="text-align: center; color: #666;">暂无历史记录</p>';
+        }
+
+        // 渲染存款折线图
+        function renderSavingsChart() {
+            const canvas = document.getElementById('savings-chart');
+            const ctx = canvas.getContext('2d');
+
+            // 设置canvas尺寸
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+
+            // 准备数据：历史记录 + 今天的当前余额
+            let data = [...(accountData.savingsHistory || [])];
+
+            const today = new Date().toISOString().split('T')[0];
+            const currentTotal = Object.values(accountData.savings).reduce((sum, val) => sum + val, 0);
+
+            // 检查今天是否已在历史记录中
+            const todayExists = data.some(record => record.date === today);
+
+            if (!todayExists && currentTotal > 0) {
+                // 添加今天的数据
+                data.push({
+                    date: today,
+                    total: currentTotal,
+                    现金: accountData.savings["现金"],
+                    工行存钱卡: accountData.savings["工行存钱卡"],
+                    农行消费卡: accountData.savings["农行消费卡"],
+                    微信: accountData.savings["微信"],
+                    支付宝: accountData.savings["支付宝"]
+                });
+            }
+
+            if (data.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('暂无数据，请更新存款余额', width / 2, height / 2);
+                return;
+            }
+
+            // 按日期排序
+            data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const padding = 50;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+
+            // 定义6条线的配置
+            const lines = [
+                { key: 'total', label: '总额', color: 'rgba(206, 147, 216, 0.9)', width: 3 },
+                { key: '现金', label: '现金', color: 'rgba(255, 182, 193, 0.8)', width: 2 },
+                { key: '工行存钱卡', label: '工行', color: 'rgba(135, 206, 250, 0.8)', width: 2 },
+                { key: '农行消费卡', label: '农行', color: 'rgba(144, 238, 144, 0.8)', width: 2 },
+                { key: '微信', label: '微信', color: 'rgba(255, 218, 185, 0.8)', width: 2 },
+                { key: '支付宝', label: '支付宝', color: 'rgba(176, 224, 230, 0.8)', width: 2 }
+            ];
+
+            // 找出所有数据的最大值和最小值
+            let maxAmount = 0;
+            let minAmount = Infinity;
+
+            data.forEach(record => {
+                lines.forEach(line => {
+                    const value = record[line.key] || 0;
+                    if (value > maxAmount) maxAmount = value;
+                    if (value < minAmount) minAmount = value;
+                });
+            });
+
+            const range = maxAmount - minAmount || 1;
+
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(206, 147, 216, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // 绘制网格线
+            ctx.strokeStyle = 'rgba(206, 147, 216, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // 绘制每条折线
+            lines.forEach(line => {
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = line.width;
+                ctx.beginPath();
+
+                data.forEach((record, index) => {
+                    const x = padding + (chartWidth / (data.length - 1 || 1)) * index;
+                    const value = record[line.key] || 0;
+                    const y = height - padding - ((value - minAmount) / range) * chartHeight;
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                // 绘制数据点（只为总额画点，避免太杂乱）
+                if (line.key === 'total') {
+                    ctx.fillStyle = line.color;
+                    data.forEach((record, index) => {
+                        const x = padding + (chartWidth / (data.length - 1 || 1)) * index;
+                        const value = record[line.key] || 0;
+                        const y = height - padding - ((value - minAmount) / range) * chartHeight;
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+            });
+
+            // 绘制日期标签
+            ctx.fillStyle = '#333';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'center';
+            data.forEach((record, index) => {
+                const x = padding + (chartWidth / (data.length - 1 || 1)) * index;
+                const dateLabel = record.date === today ? '今天' : record.date.slice(5);
+                ctx.fillText(dateLabel, x, height - padding + 20);
+            });
+
+            // 绘制Y轴标签
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (chartHeight / 4) * i;
+                const value = maxAmount - (range / 4) * i;
+                ctx.fillText(`¥${value.toFixed(0)}`, padding - 10, y + 4);
+            }
+
+            // 绘制图例
+            const legendX = padding;
+            const legendY = 15;
+            const legendSpacing = width > 600 ? 80 : 60;
+
+            ctx.font = '11px monospace';
+            lines.forEach((line, index) => {
+                const x = legendX + (index % 3) * legendSpacing;
+                const y = legendY + Math.floor(index / 3) * 15;
+
+                // 画线条示例
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = line.width;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 20, y);
+                ctx.stroke();
+
+                // 画标签
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'left';
+                ctx.fillText(line.label, x + 25, y + 4);
+            });
+        }
+
+        // 渲染支出列表
+        function renderExpenses() {
+            // 按类别分组渲染（不包括旅行）
+            const categories = ['吃饭', '家居', '服饰', '学习', '其它'];
+            const containerIds = ['food-list', 'home-list', 'clothing-list', 'study-list', 'other-list'];
+
+            categories.forEach((category, index) => {
+                const container = document.getElementById(containerIds[index]);
+
+                // 跳过家居类别（家居有自己的渲染逻辑）
+                if (category === '家居') {
+                    return;
+                }
+
+                const categoryExpenses = accountData.expenses
+                    .filter(item => item.category === category);
+
+                if (categoryExpenses.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-light); font-size: 13px; padding: 20px 0;">暂无记录</p>';
+                    return;
+                }
+
+                // 吃饭模块特殊排序：按日期倒序，同一天按早午晚顺序
+                if (category === '吃饭') {
+                    categoryExpenses.sort((a, b) => {
+                        const dateCompare = new Date(b.date) - new Date(a.date);
+                        if (dateCompare !== 0) return dateCompare;
+
+                        // 同一天按早午晚排序
+                        const mealOrder = { '早饭': 1, '午饭': 2, '晚饭': 3 };
+                        const aOrder = mealOrder[a.time] || 999;
+                        const bOrder = mealOrder[b.time] || 999;
+                        return aOrder - bOrder;
+                    });
+                } else {
+                    // 其他模块：按日期倒序
+                    categoryExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+                }
+
+                container.innerHTML = categoryExpenses.map(item => {
+                    // 格式化日期显示
+                    const [year, month, day] = item.date.split('-');
+                    const displayDate = `${year}年${parseInt(month)}月${parseInt(day)}日`;
+
+                    // 吃饭模块：三行显示 - 日期 / 用餐时间 / 内容+金额
+                    if (category === '吃饭') {
+                        return `
+                            <div class="history-item" data-expense-id="${item.id}">
+                                <div class="history-item-delete" onclick="deleteExpense(${item.id})">删除</div>
+                                <div class="history-item-content"
+                                     ontouchstart="handleExpenseTouchStart(event)"
+                                     ontouchmove="handleExpenseTouchMove(event)"
+                                     ontouchend="handleExpenseTouchEnd(event)"
+                                     onmousedown="handleExpenseTouchStart(event)"
+                                     onmousemove="handleExpenseTouchMove(event)"
+                                     onmouseup="handleExpenseTouchEnd(event)"
+                                     onmouseleave="handleExpenseTouchEnd(event)">
+                                    <div class="expense-checkbox" onclick="toggleExpenseSelection(${item.id}, event)"></div>
+                                    <div class="expense-item-main" style="width: 100%;">
+                                        <div style="font-size: 13px; color: var(--text-light); margin-bottom: 6px;">${displayDate}</div>
+                                        <div style="font-size: 15px; font-weight: 500; color: var(--text-dark); margin-bottom: 6px;">${item.time || ''}</div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="font-size: 14px; color: var(--text-dark);">${item.note || ''}</div>
+                                            <div style="font-size: 16px; font-weight: 600; color: var(--text-dark); white-space: nowrap; margin-left: 16px;">¥${item.amount.toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // 学习和其他模块：显示日期、项目、金额
+                    return `
+                        <div class="history-item" data-expense-id="${item.id}">
+                            <div class="history-item-delete" onclick="deleteExpense(${item.id})">删除</div>
+                            <div class="history-item-content"
+                                 ontouchstart="handleExpenseTouchStart(event)"
+                                 ontouchmove="handleExpenseTouchMove(event)"
+                                 ontouchend="handleExpenseTouchEnd(event)"
+                                 onmousedown="handleExpenseTouchStart(event)"
+                                 onmousemove="handleExpenseTouchMove(event)"
+                                 onmouseup="handleExpenseTouchEnd(event)"
+                                 onmouseleave="handleExpenseTouchEnd(event)">
+                                <div class="expense-checkbox" onclick="toggleExpenseSelection(${item.id}, event)"></div>
+                                <div class="expense-item-main" style="width: 100%;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 13px; color: var(--text-light); margin-bottom: 4px;">${displayDate}</div>
+                                            ${item.note ? `<div style="font-size: 15px; font-weight: 500; color: var(--text-dark);">${item.note}</div>` : ''}
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: var(--text-dark); white-space: nowrap; margin-left: 16px;">¥${item.amount.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        // 处理支出记录滑动
+        function handleExpenseTouchStart(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+            isSwiping = true;
+        }
+
+        function handleExpenseTouchMove(e) {
+            if (!isSwiping) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            touchCurrentX = touch.clientX;
+            const deltaX = touchCurrentX - touchStartX;
+
+            if (deltaX < 0) {
+                const element = e.currentTarget;
+                element.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+            }
+        }
+
+        function handleExpenseTouchEnd(e) {
+            if (!isSwiping) return;
+
+            const deltaX = touchCurrentX - touchStartX;
+            const element = e.currentTarget;
+
+            if (deltaX < -40) {
+                element.style.transform = 'translateX(-80px)';
+            } else {
+                element.style.transform = 'translateX(0)';
+            }
+
+            isSwiping = false;
+            touchStartX = 0;
+            touchCurrentX = 0;
+        }
+
+        // 删除支出
+        function deleteExpense(id) {
+            if (confirm('确定删除这条记录？')) {
+                accountData.expenses = accountData.expenses.filter(item => item.id !== id);
+                saveData();
+                renderExpenses();
+            }
+        }
+
+        // 切换选择模式
+        function toggleSelectionMode() {
+            isSelectionMode = !isSelectionMode;
+            selectedExpenseIds = [];
+            selectedCardIds = {
+                shopping: [],
+                clothing: [],
+                home: { shenzhen: [], chongqing: [] }
+            };
+            selectedTravelIds = [];
+
+            const btn = document.getElementById('selection-mode-btn');
+            const summary = document.getElementById('selection-summary');
+            const checkboxes = document.querySelectorAll('.expense-checkbox');
+
+            if (isSelectionMode) {
+                btn.textContent = '完成';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+                summary.style.display = 'block';
+                checkboxes.forEach(cb => cb.classList.add('show'));
+            } else {
+                btn.textContent = '选择';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                summary.style.display = 'none';
+                checkboxes.forEach(cb => {
+                    cb.classList.remove('show', 'checked');
+                });
+            }
+
+            // 重新渲染卡片以更新选择指示器
+            renderCards();
+            renderExpenses();
+            renderTravelProjects();
+
+            updateSelectedTotal();
+        }
+
+        // 切换单个记录的选择状态
+        function toggleExpenseSelection(id, event) {
+            if (!isSelectionMode) return;
+
+            event.stopPropagation();
+
+            const index = selectedExpenseIds.indexOf(id);
+            const checkbox = event.target;
+
+            if (index > -1) {
+                selectedExpenseIds.splice(index, 1);
+                checkbox.classList.remove('checked');
+            } else {
+                selectedExpenseIds.push(id);
+                checkbox.classList.add('checked');
+            }
+
+            updateSelectedTotal();
+        }
+
+        // 更新选中金额总和
+        function updateSelectedTotal() {
+            let total = 0;
+
+            // 计算expenses中的选中项
+            selectedExpenseIds.forEach(id => {
+                const expense = accountData.expenses.find(e => e.id === id);
+                if (expense) {
+                    total += expense.amount;
+                }
+            });
+
+            // 计算shopping中的选中项
+            if (selectedCardIds.shopping) {
+                selectedCardIds.shopping.forEach(id => {
+                    const card = accountData.shopping.find(c => c.id === id);
+                    if (card) total += card.amount;
+                });
+            }
+
+            // 计算clothing中的选中项
+            if (selectedCardIds.clothing) {
+                selectedCardIds.clothing.forEach(id => {
+                    const card = accountData.clothing.find(c => c.id === id);
+                    if (card) total += card.amount;
+                });
+            }
+
+            // 计算home中的选中项
+            if (selectedCardIds.home) {
+                ['shenzhen', 'chongqing'].forEach(location => {
+                    if (selectedCardIds.home[location]) {
+                        selectedCardIds.home[location].forEach(id => {
+                            const card = accountData.homeAssets[location].find(c => c.id === id);
+                            if (card) total += card.amount;
+                        });
+                    }
+                });
+            }
+
+            // 计算travel中的选中项
+            if (selectedTravelIds.length > 0) {
+                accountData.travelProjects.forEach(project => {
+                    const transportTotal = project.transportation.reduce((sum, item) => sum + (item.amount || 0), 0);
+                    const accommodationTotal = project.accommodation.reduce((sum, item) => sum + (item.amount || 0), 0);
+                    const projectTotal = transportTotal + accommodationTotal;
+
+                    if (selectedTravelIds.includes(project.id)) {
+                        total += projectTotal;
+                    }
+                });
+            }
+
+            document.getElementById('selected-total').textContent = `¥${total.toFixed(2)}`;
+        }
+
+        // 处理卡片滑动
+        function handleCardTouchStart(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            touchStartX = touch.clientX;
+            touchCurrentX = touch.clientX;
+            isSwiping = true;
+        }
+
+        function handleCardTouchMove(e) {
+            if (!isSwiping) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            touchCurrentX = touch.clientX;
+            const deltaX = touchCurrentX - touchStartX;
+
+            if (deltaX < 0) {
+                const element = e.currentTarget;
+                element.style.transform = `translateX(${Math.max(deltaX, -80)}px)`;
+            }
+        }
+
+        function handleCardTouchEnd(e) {
+            if (!isSwiping) return;
+
+            const deltaX = touchCurrentX - touchStartX;
+            const element = e.currentTarget;
+
+            if (deltaX < -40) {
+                element.style.transform = 'translateX(-80px)';
+            } else {
+                element.style.transform = 'translateX(0)';
+            }
+
+            isSwiping = false;
+            touchStartX = 0;
+            touchCurrentX = 0;
+        }
+
+        // 切换卡片选择状态
+        function toggleCardSelection(type, cardId, event, location = '') {
+            if (!isSelectionMode) return;
+
+            event.stopPropagation();
+
+            if (type === 'home') {
+                if (!selectedCardIds.home[location]) {
+                    selectedCardIds.home[location] = [];
+                }
+                const index = selectedCardIds.home[location].indexOf(cardId);
+
+                if (index > -1) {
+                    selectedCardIds.home[location].splice(index, 1);
+                } else {
+                    selectedCardIds.home[location].push(cardId);
+                }
+            } else {
+                const index = selectedCardIds[type].indexOf(cardId);
+
+                if (index > -1) {
+                    selectedCardIds[type].splice(index, 1);
+                } else {
+                    selectedCardIds[type].push(cardId);
+                }
+            }
+
+            // 重新渲染卡片以更新选择状态
+            renderCards();
+            updateSelectedTotal();
+        }
+
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('accountData', JSON.stringify(accountData));
+        }
+
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem('accountData');
+            if (saved) {
+                accountData = JSON.parse(saved);
+
+                // 确保assetSnapshots结构存在
+                if (!accountData.assetSnapshots) {
+                    accountData.assetSnapshots = [];
+                }
+
+                // 确保homeAssets结构存在
+                if (!accountData.homeAssets) {
+                    accountData.homeAssets = {
+                        shenzhen: [],
+                        chongqing: []
+                    };
+                }
+
+                // 确保travelProjects存在
+                if (!accountData.travelProjects) {
+                    accountData.travelProjects = [];
+                }
+
+                // 确保新的卡片数据结构存在
+                if (!accountData.shopping) {
+                    accountData.shopping = [];
+                }
+                if (!accountData.clothing) {
+                    accountData.clothing = [];
+                }
+            }
+        }
+
+        // 导出数据
+        function exportData() {
+            const dataStr = JSON.stringify(accountData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `记账数据_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入数据
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (confirm('导入数据将覆盖当前数据，确定继续？')) {
+                        accountData = imported;
+                        saveData();
+                        renderIncome();
+                        renderSavings();
+                        renderExpenses();
+                        renderCalendar();
+                        alert('导入成功！');
+                    }
+                } catch (error) {
+                    alert('导入失败：文件格式不正确');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>
