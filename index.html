@@ -2049,8 +2049,8 @@
                 return;
             }
 
-            // 按日期倒序排列
-            const sortedCards = [...cards].sort((a, b) => new Date(b.date) - new Date(a.date));
+            // 按ID倒序排列（ID是时间戳，越大越新）
+            const sortedCards = [...cards].sort((a, b) => b.id - a.id);
 
             container.innerHTML = sortedCards.map(card => {
                 const isSelected = isCardSelected(type, card.id);
@@ -2088,8 +2088,8 @@
                     return;
                 }
 
-                // 按日期倒序排列
-                const sortedCards = [...cards].sort((a, b) => new Date(b.date) - new Date(a.date));
+                // 按ID倒序排列（ID是时间戳，越大越新）
+                const sortedCards = [...cards].sort((a, b) => b.id - a.id);
 
                 container.innerHTML = sortedCards.map(card => {
                     const isSelected = selectedCardIds.home && selectedCardIds.home[location] && selectedCardIds.home[location].includes(card.id);
