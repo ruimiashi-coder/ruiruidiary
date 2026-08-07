@@ -2,13 +2,21 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>个人记账</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>RUI</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow-x: hidden;
+            width: 100%;
         }
 
         :root {
@@ -34,7 +42,7 @@
         }
 
         body {
-            font-family: 'SimSun', '宋体', 'STSong', serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
             background: var(--bg-color);
             min-height: 100vh;
             padding: 20px;
@@ -42,17 +50,29 @@
             font-size: 15px;
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+                font-size: 14px;
+            }
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
+            width: 100%;
+            overflow-x: hidden;
         }
 
         .header {
             background: var(--card-bg);
             border-radius: 8px;
-            padding: 30px 20px;
+            padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             position: relative;
@@ -60,22 +80,17 @@
         }
 
         .header h1 {
-            color: var(--text-dark);
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            text-align: center;
-            letter-spacing: -0.5px;
-            transition: color 0.3s;
+            display: none;
         }
 
         .data-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
+            position: relative;
+            bottom: auto;
+            right: auto;
             display: flex;
             gap: 10px;
             align-items: center;
+            justify-content: center;
         }
 
         .theme-toggle {
@@ -246,11 +261,19 @@
             padding: 12px 16px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 16px;
             background: var(--card-bg);
             color: var(--text-dark);
             font-family: inherit;
             transition: border-color 0.2s, background-color 0.3s, color 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .form-group input,
+            .form-group select {
+                font-size: 16px;
+                padding: 14px 16px;
+            }
         }
 
         .form-group input:focus,
@@ -603,6 +626,7 @@
             position: relative;
             overflow: visible;
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .card-item-content {
@@ -616,6 +640,15 @@
             transition: background-color 0.2s, box-shadow 0.2s;
             border: none;
             min-height: 200px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .card-item-content {
+                padding: 24px 20px 8px 20px;
+                min-height: 180px;
+            }
         }
 
         body:not(.dark-mode) .card-item-content {
@@ -634,7 +667,16 @@
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            order: 1;
+        }
+
+        @media (max-width: 768px) {
+            .card-image {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 12px;
+            }
         }
 
         .card-image-placeholder {
@@ -644,27 +686,51 @@
         .card-info {
             width: 100%;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 0;
+            order: 2;
         }
 
         .card-description {
             font-size: 13px;
             color: var(--text-gray);
-            margin-bottom: 10px;
+            margin-bottom: 0;
+            order: 4;
+        }
+
+        @media (max-width: 768px) {
+            .card-description {
+                font-size: 12px;
+            }
         }
 
         .card-title {
             font-size: 20px;
             font-weight: 600;
             color: var(--text-dark);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            order: 2;
+        }
+
+        @media (max-width: 768px) {
+            .card-title {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
         }
 
         .card-amount {
             font-size: 28px;
             font-weight: 700;
             color: var(--text-dark);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            order: 3;
+        }
+
+        @media (max-width: 768px) {
+            .card-amount {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
         }
 
         .card-actions {
@@ -676,6 +742,16 @@
             padding-top: 8px;
             border-top: 1px solid var(--border-color);
             margin-top: auto;
+            order: 5;
+            touch-action: manipulation;
+        }
+
+        @media (max-width: 768px) {
+            .card-actions {
+                gap: 80px;
+                padding-top: 8px;
+                padding-bottom: 4px;
+            }
         }
 
         .card-action-btn {
@@ -684,8 +760,20 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 8px 12px;
             transition: color 0.2s;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        @media (max-width: 768px) {
+            .card-action-btn {
+                font-size: 14px;
+                padding: 10px 16px;
+                min-height: 44px;
+            }
         }
 
         .card-action-btn:hover {
@@ -1859,11 +1947,9 @@
                             <div class="card-select-indicator ${isSelectionMode ? 'visible' : ''} ${isSelected ? 'selected' : ''}"
                                  onclick="toggleCardSelection('${type}', ${card.id}, event)"></div>
                             ${card.image ? `<img src="${card.image}" class="card-image" alt="${card.title}">` : ''}
-                            <div class="card-info">
-                                ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
-                                <div class="card-title">${card.title}</div>
-                            </div>
+                            <div class="card-title">${card.title}</div>
                             <div class="card-amount">¥${card.amount.toFixed(2)}</div>
+                            ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
                             <div class="card-actions">
                                 <button class="card-action-btn" onclick="editCard('${type}', ${card.id}, event)">编辑</button>
                                 <button class="card-action-btn delete" onclick="deleteCard('${type}', ${card.id}, event)">删除</button>
@@ -1900,11 +1986,9 @@
                                 <div class="card-select-indicator ${isSelectionMode ? 'visible' : ''} ${isSelected ? 'selected' : ''}"
                                      onclick="toggleCardSelection('home', ${card.id}, event, '${location}')"></div>
                                 ${card.image ? `<img src="${card.image}" class="card-image" alt="${card.title}">` : ''}
-                                <div class="card-info">
-                                    ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
-                                    <div class="card-title">${card.title}</div>
-                                </div>
+                                <div class="card-title">${card.title}</div>
                                 <div class="card-amount">¥${card.amount.toFixed(2)}</div>
+                                ${card.description ? `<div class="card-description">${card.description}</div>` : ''}
                                 <div class="card-actions">
                                     <button class="card-action-btn" onclick="editCard('home', ${card.id}, event, '${location}')">编辑</button>
                                     <button class="card-action-btn delete" onclick="deleteCard('home', ${card.id}, event, '${location}')">删除</button>
