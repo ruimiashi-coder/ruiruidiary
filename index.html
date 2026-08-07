@@ -2881,8 +2881,8 @@
 
             const inputHtml = `
                 <div class="travel-record-item" id="pending-asset-${id}" style="margin-bottom: 10px;">
-                    <input type="text" id="pending-name-${id}" style="flex: 2;">
-                    <input type="number" id="pending-value-${id}" step="0.01" style="flex: 1;" value="0">
+                    <input type="text" id="pending-name-${id}" placeholder="名称" style="flex: 3;">
+                    <input type="number" id="pending-value-${id}" step="0.01" placeholder="金额" style="flex: 1.5; min-width: 80px;" value="0">
                     <button class="btn btn-secondary" style="padding: 10px; width: 50px;" onclick="removePendingAssetInput(${id})">删除</button>
                 </div>
             `;
