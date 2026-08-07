@@ -718,8 +718,8 @@
         }
 
         .card-image {
-            width: 160px;
-            height: 160px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
@@ -729,8 +729,8 @@
 
         @media (max-width: 768px) {
             .card-image {
-                width: 140px;
-                height: 140px;
+                width: 175px;
+                height: 175px;
                 margin-bottom: 16px;
             }
         }
@@ -760,6 +760,11 @@
             word-break: break-word;
             white-space: pre-wrap;
             text-align: center;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+        body:not(.dark-mode) .card-description {
+            color: #000000;
         }
 
         @media (max-width: 768px) {
@@ -779,6 +784,7 @@
             overflow-wrap: break-word;
             word-break: break-word;
             text-align: center;
+            font-family: "SimSun", "宋体", serif;
         }
 
         @media (max-width: 768px) {
@@ -799,6 +805,7 @@
             overflow-wrap: break-word;
             word-break: break-word;
             text-align: center;
+            font-family: "SimSun", "宋体", serif;
         }
 
         @media (max-width: 768px) {
@@ -814,8 +821,8 @@
             justify-content: center;
             align-items: center;
             gap: 120px;
-            padding-top: 4px;
-            padding-bottom: 4px;
+            padding-top: 2px;
+            padding-bottom: 2px;
             border-top: 1px solid var(--border-color);
             margin-top: auto;
             order: 5;
@@ -825,8 +832,8 @@
         @media (max-width: 768px) {
             .card-actions {
                 gap: 80px;
-                padding-top: 4px;
-                padding-bottom: 4px;
+                padding-top: 2px;
+                padding-bottom: 2px;
             }
         }
 
@@ -836,7 +843,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 4px 12px;
+            padding: 2px 12px;
             transition: color 0.2s;
             touch-action: manipulation;
             -webkit-touch-callout: none;
@@ -847,8 +854,8 @@
         @media (max-width: 768px) {
             .card-action-btn {
                 font-size: 13px;
-                padding: 6px 16px;
-                min-height: 36px;
+                padding: 4px 16px;
+                min-height: 32px;
             }
         }
 
