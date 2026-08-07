@@ -279,7 +279,13 @@
         }
 
         .form-group input[type="date"] {
-            max-width: 100%;
+            max-width: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .form-group input[type="date"] {
+                max-width: 180px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -302,6 +308,14 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .asset-grid .form-group {
+            margin-bottom: 0;
+            min-width: 0;
         }
 
         .asset-grid-full {
@@ -1100,6 +1114,7 @@
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
+            overflow-x: hidden;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             -webkit-overflow-scrolling: touch;
             position: relative;
