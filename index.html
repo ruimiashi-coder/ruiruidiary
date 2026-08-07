@@ -278,6 +278,10 @@
             transition: border-color 0.2s, background-color 0.3s, color 0.3s;
         }
 
+        .form-group input[type="date"] {
+            max-width: 100%;
+        }
+
         @media (max-width: 768px) {
             .form-group input,
             .form-group select,
@@ -292,8 +296,27 @@
             min-height: 80px;
         }
 
+        /* 资产账户网格布局 */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .asset-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .asset-grid {
+                gap: 12px;
+            }
+        }
+
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--primary-color);
         }
@@ -1281,29 +1304,31 @@
 
                 <h4 style="color: var(--purple-soft); margin: 20px 0 10px 0; font-size: 16px;">资产账户</h4>
 
-                <div class="form-group">
-                    <label>工行存钱卡</label>
-                    <input type="number" id="modal-icbc" step="0.01" value="0">
-                </div>
+                <div class="asset-grid">
+                    <div class="form-group">
+                        <label>工行存钱卡</label>
+                        <input type="number" id="modal-icbc" step="0.01" value="0">
+                    </div>
 
-                <div class="form-group">
-                    <label>农行消费卡</label>
-                    <input type="number" id="modal-abc" step="0.01" value="0">
-                </div>
+                    <div class="form-group">
+                        <label>农行消费卡</label>
+                        <input type="number" id="modal-abc" step="0.01" value="0">
+                    </div>
 
-                <div class="form-group">
-                    <label>微信</label>
-                    <input type="number" id="modal-wechat" step="0.01" value="0">
-                </div>
+                    <div class="form-group">
+                        <label>微信</label>
+                        <input type="number" id="modal-wechat" step="0.01" value="0">
+                    </div>
 
-                <div class="form-group">
-                    <label>支付宝</label>
-                    <input type="number" id="modal-alipay" step="0.01" value="0">
-                </div>
+                    <div class="form-group">
+                        <label>支付宝</label>
+                        <input type="number" id="modal-alipay" step="0.01" value="0">
+                    </div>
 
-                <div class="form-group">
-                    <label>现金</label>
-                    <input type="number" id="modal-cash" step="0.01" value="0">
+                    <div class="form-group asset-grid-full">
+                        <label>现金</label>
+                        <input type="number" id="modal-cash" step="0.01" value="0">
+                    </div>
                 </div>
 
                 <h4 style="color: var(--purple-soft); margin: 20px 0 10px 0; font-size: 16px;">待售资产</h4>
