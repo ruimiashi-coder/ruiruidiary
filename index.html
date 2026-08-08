@@ -869,7 +869,7 @@
             justify-content: center;
             align-items: center;
             gap: 120px;
-            padding: 4px 0 4px 0;
+            padding: 2px 0 2px 0;
             border-top: 1px solid var(--border-color);
             margin-top: 16px;
             margin-bottom: 0;
@@ -880,7 +880,7 @@
         @media (max-width: 768px) {
             .card-actions {
                 gap: 80px;
-                padding: 4px 0 4px 0;
+                padding: 2px 0 2px 0;
                 margin-top: 12px;
             }
         }
@@ -1748,12 +1748,16 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadTheme();
-            loadData();
-            renderIncome();
-            renderAssetSnapshots();
-            renderExpenses();
-            renderCards();
-            renderTravelProjects();
+            loadData(); // loadData 内部会在数据加载完成后调用 renderAllViews()
+            // 如果是非混合模式（同步加载），立即渲染
+            if (!USE_HYBRID_MODE) {
+                renderIncome();
+                renderAssetSnapshots();
+                renderExpenses();
+                renderCards();
+                renderTravelProjects();
+            }
+            // 混合模式下，renderAllViews() 会在 fetch 完成后自动调用
             autoDetectMealTime();
             setDefaultDates();
         });
@@ -2254,6 +2258,8 @@
 
         // 渲染所有卡片
         function renderCards() {
+            console.log('renderCards() 被调用');
+            console.log('服饰数据:', accountData.clothing);
             renderCardList('shopping', accountData.shopping, 'shopping-list');
             renderCardList('clothing', accountData.clothing, 'clothing-list');
             renderHomeCards();
