@@ -1959,7 +1959,7 @@
 
             const mealTime = selectedMealTypes.join('、');
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: mealTime,
@@ -1967,7 +1967,10 @@
                 category: '吃饭',
                 subcategory: '',
                 note: menu || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+            if (USE_HYBRID_MODE) newAccountData.expenses.push(newExpense);
 
             document.getElementById('food-amount').value = '';
             document.getElementById('food-menu').value = '';
@@ -2480,6 +2483,8 @@
             };
 
             accountData.travelProjects.push(newProject);
+            if (USE_HYBRID_MODE) newAccountData.travelProjects.push(newProject);
+
             saveData();
             renderTravelProjects();
         }
@@ -2788,7 +2793,7 @@
                 return;
             }
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: '',
@@ -2796,7 +2801,10 @@
                 category: '学习',
                 subcategory: '',
                 note: project || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+            if (USE_HYBRID_MODE) newAccountData.expenses.push(newExpense);
 
             document.getElementById('study-amount').value = '';
             document.getElementById('study-project').value = '';
@@ -2819,7 +2827,7 @@
                 return;
             }
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: '',
@@ -2827,7 +2835,10 @@
                 category: '其它',
                 subcategory: '',
                 note: project || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+            if (USE_HYBRID_MODE) newAccountData.expenses.push(newExpense);
 
             document.getElementById('other-amount').value = '';
             document.getElementById('other-project').value = '';
@@ -2876,12 +2887,15 @@
                 return;
             }
 
-            accountData.income.push({
+            const newIncome = {
                 id: Date.now(),
                 date,
                 category,
                 amount
-            });
+            };
+
+            accountData.income.push(newIncome);
+            if (USE_HYBRID_MODE) newAccountData.income.push(newIncome);
 
             saveData();
             renderIncome();
@@ -3127,9 +3141,13 @@
             };
 
             accountData.assetSnapshots.push(snapshot);
+            if (USE_HYBRID_MODE) newAccountData.assetSnapshots.push(snapshot);
 
             // 按日期排序
             accountData.assetSnapshots.sort((a, b) => new Date(b.date) - new Date(a.date));
+            if (USE_HYBRID_MODE) {
+                newAccountData.assetSnapshots.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
 
             saveData();
             renderAssetSnapshots();
@@ -3323,7 +3341,7 @@
                     支付宝: alipay
                 };
             } else {
-                accountData.savingsHistory.push({
+                const newHistory = {
                     date: date,
                     total: total,
                     现金: cash,
@@ -3331,11 +3349,16 @@
                     农行消费卡: abc,
                     微信: wechat,
                     支付宝: alipay
-                });
+                };
+                accountData.savingsHistory.push(newHistory);
+                if (USE_HYBRID_MODE) newAccountData.savingsHistory.push(newHistory);
             }
 
             // 按日期排序
             accountData.savingsHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (USE_HYBRID_MODE) {
+                newAccountData.savingsHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
 
             saveData();
             renderSavings();
