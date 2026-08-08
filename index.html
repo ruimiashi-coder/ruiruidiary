@@ -4251,10 +4251,16 @@
 
                     // 5. 统计信息
                     const stats = calculateImportStats(onlyNewData);
+                    const storageInfo = getLocalStorageUsage();
+
                     let message = '导入成功！（混合模式）\n\n';
                     message += `从 backup.json: ${stats.backupCount} 条记录\n`;
                     message += `新增数据: ${stats.newCount} 条记录\n`;
-                    message += `总计显示: ${stats.totalCount} 条记录`;
+                    message += `总计显示: ${stats.totalCount} 条记录\n\n`;
+                    message += `📊 存储使用情况：\n`;
+                    message += `已用: ${storageInfo.usedMB} MB / 约 ${storageInfo.limitMB} MB\n`;
+                    message += `使用率: ${storageInfo.percentage}%`;
+
                     alert(message);
                 })
                 .catch(error => {
@@ -4395,7 +4401,6 @@
         // 计算导入统计信息
         function calculateImportStats(newData) {
             let newCount = 0;
-            let backupCount = 0;
 
             // 计算新增数据数量
             newCount += (newData.income || []).length;
@@ -4408,22 +4413,51 @@
             newCount += (newData.travelProjects || []).length;
             newCount += (newData.savingsHistory || []).length;
 
-            // 计算 backup.json 数据数量（从当前 accountData）
-            backupCount += (accountData.income || []).length - newCount;
-            backupCount += (accountData.expenses || []).length;
-            backupCount += (accountData.shopping || []).length;
-            backupCount += (accountData.clothing || []).length;
+            // 计算总记录数（从合并后的 accountData）
+            const totalCount = (accountData.income || []).length +
+                             (accountData.expenses || []).length +
+                             (accountData.shopping || []).length +
+                             (accountData.clothing || []).length +
+                             (accountData.homeAssets?.shenzhen || []).length +
+                             (accountData.homeAssets?.chongqing || []).length +
+                             (accountData.travelProjects || []).length +
+                             (accountData.assetSnapshots || []).length +
+                             (accountData.savingsHistory || []).length;
+
+            // 计算 backup.json 数据数量 = 总数 - 新增数
+            const backupCount = totalCount - newCount;
 
             return {
                 newCount,
                 backupCount,
-                totalCount: (accountData.income || []).length +
-                           (accountData.expenses || []).length +
-                           (accountData.shopping || []).length +
-                           (accountData.clothing || []).length +
-                           (accountData.homeAssets?.shenzhen || []).length +
-                           (accountData.homeAssets?.chongqing || []).length +
-                           (accountData.travelProjects || []).length
+                totalCount
+            };
+        }
+
+        // 获取 localStorage 使用情况
+        function getLocalStorageUsage() {
+            let totalSize = 0;
+
+            // 计算所有 localStorage 数据的大小
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        // UTF-16 编码，每字符 2 字节
+                        totalSize += value.length * 2;
+                    }
+                }
+            }
+
+            const usedMB = (totalSize / (1024 * 1024)).toFixed(2);
+            const limitMB = 5; // Safari 约 5MB
+            const percentage = Math.min(((totalSize / (limitMB * 1024 * 1024)) * 100).toFixed(1), 100);
+
+            return {
+                usedMB,
+                limitMB,
+                percentage,
+                usedBytes: totalSize
             };
         }
     </script>
