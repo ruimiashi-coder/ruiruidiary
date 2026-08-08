@@ -4193,108 +4193,16 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (confirm('导入数据将覆盖当前数据，确定继续？')) {
-                        accountData = imported;
 
-                        // 确保所有数据结构完整性
-                        if (!accountData.income) {
-                            accountData.income = [];
+                    if (USE_HYBRID_MODE) {
+                        // 混合模式：智能合并
+                        if (confirm('导入数据将与 backup.json 合并，只保存新增部分到本地存储，确定继续？')) {
+                            importDataInHybridMode(imported);
                         }
-                        if (!accountData.assetSnapshots) {
-                            accountData.assetSnapshots = [];
-                        }
-                        if (!accountData.expenses) {
-                            accountData.expenses = [];
-                        }
-                        if (!accountData.shopping) {
-                            accountData.shopping = [];
-                        }
-                        if (!accountData.clothing) {
-                            accountData.clothing = [];
-                        }
-                        if (!accountData.homeAssets) {
-                            accountData.homeAssets = {
-                                shenzhen: [],
-                                chongqing: []
-                            };
-                        } else {
-                            if (!accountData.homeAssets.shenzhen) {
-                                accountData.homeAssets.shenzhen = [];
-                            }
-                            if (!accountData.homeAssets.chongqing) {
-                                accountData.homeAssets.chongqing = [];
-                            }
-                        }
-                        if (!accountData.travelProjects) {
-                            accountData.travelProjects = [];
-                        }
-                        if (!accountData.savings) {
-                            accountData.savings = {
-                                "现金": 0,
-                                "工行存钱卡": 0,
-                                "农行消费卡": 0,
-                                "微信": 0,
-                                "支付宝": 0
-                            };
-                        }
-                        if (!accountData.savingsHistory) {
-                            accountData.savingsHistory = [];
-                        }
-
-                        // 验证图片数据完整性
-                        let imageCount = 0;
-                        let invalidImageCount = 0;
-
-                        ['shopping', 'clothing'].forEach(key => {
-                            if (accountData[key]) {
-                                accountData[key].forEach(item => {
-                                    if (item.image) {
-                                        imageCount++;
-                                        if (!item.image.startsWith('data:image/')) {
-                                            invalidImageCount++;
-                                            item.image = ''; // 清除无效图片
-                                        }
-                                    }
-                                });
-                            }
-                        });
-
-                        ['shenzhen', 'chongqing'].forEach(location => {
-                            if (accountData.homeAssets[location]) {
-                                accountData.homeAssets[location].forEach(item => {
-                                    if (item.image) {
-                                        imageCount++;
-                                        if (!item.image.startsWith('data:image/')) {
-                                            invalidImageCount++;
-                                            item.image = ''; // 清除无效图片
-                                        }
-                                    }
-                                });
-                            }
-                        });
-
-                        try {
-                            saveData();
-                            renderIncome();
-                            renderExpenses();
-                            renderCards();
-                            renderTravelProjects();
-                            renderAssetSnapshots();
-
-                            let message = '导入成功！';
-                            if (imageCount > 0) {
-                                message += `\n包含 ${imageCount} 张图片`;
-                                if (invalidImageCount > 0) {
-                                    message += `\n（${invalidImageCount} 张图片数据无效已清除）`;
-                                }
-                            }
-                            alert(message);
-                        } catch (saveError) {
-                            if (saveError.name === 'QuotaExceededError') {
-                                alert('导入失败：数据量过大超出存储限制\n建议删除一些带图片的记录后重试');
-                            } else {
-                                throw saveError;
-                            }
+                    } else {
+                        // 本地模式：完全替换
+                        if (confirm('导入数据将覆盖当前数据，确定继续？')) {
+                            importDataInLocalMode(imported);
                         }
                     }
                 } catch (error) {
@@ -4304,6 +4212,219 @@
             };
             reader.readAsText(file);
             event.target.value = '';
+        }
+
+        // 混合模式导入：智能合并
+        function importDataInHybridMode(imported) {
+            // 1. 先加载 backup.json 作为基础
+            fetch('./backup.json')
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('没有找到 backup.json，将导入数据全部保存为新数据');
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(backupData => {
+                    if (!backupData) {
+                        // 没有 backup.json，全部保存为新数据
+                        newAccountData = imported;
+                        ensureDataStructure();
+                        saveData();
+                        accountData = newAccountData;
+                        renderAllViews();
+                        alert('导入成功！所有数据已保存到本地存储。');
+                        return;
+                    }
+
+                    // 2. 对比并提取新增数据
+                    const onlyNewData = extractNewData(imported, backupData);
+
+                    // 3. 保存新增部分到 newAccountData
+                    newAccountData = onlyNewData;
+                    saveData();
+
+                    // 4. 合并显示
+                    accountData = mergeAccountData(backupData, newAccountData);
+                    ensureDataStructure();
+                    renderAllViews();
+
+                    // 5. 统计信息
+                    const stats = calculateImportStats(onlyNewData);
+                    let message = '导入成功！（混合模式）\n\n';
+                    message += `从 backup.json: ${stats.backupCount} 条记录\n`;
+                    message += `新增数据: ${stats.newCount} 条记录\n`;
+                    message += `总计显示: ${stats.totalCount} 条记录`;
+                    alert(message);
+                })
+                .catch(error => {
+                    alert('导入失败: ' + error.message);
+                    console.error('Import error:', error);
+                });
+        }
+
+        // 本地模式导入：完全替换
+        function importDataInLocalMode(imported) {
+            accountData = imported;
+            ensureDataStructure();
+
+            // 验证图片数据完整性
+            let imageCount = 0;
+            let invalidImageCount = 0;
+
+            ['shopping', 'clothing'].forEach(key => {
+                if (accountData[key]) {
+                    accountData[key].forEach(item => {
+                        if (item.image) {
+                            imageCount++;
+                            if (!item.image.startsWith('data:image/')) {
+                                invalidImageCount++;
+                                item.image = '';
+                            }
+                        }
+                    });
+                }
+            });
+
+            ['shenzhen', 'chongqing'].forEach(location => {
+                if (accountData.homeAssets[location]) {
+                    accountData.homeAssets[location].forEach(item => {
+                        if (item.image) {
+                            imageCount++;
+                            if (!item.image.startsWith('data:image/')) {
+                                invalidImageCount++;
+                                item.image = '';
+                            }
+                        }
+                    });
+                }
+            });
+
+            try {
+                saveData();
+                renderAllViews();
+
+                let message = '导入成功！';
+                if (imageCount > 0) {
+                    message += `\n包含 ${imageCount} 张图片`;
+                    if (invalidImageCount > 0) {
+                        message += `\n（${invalidImageCount} 张图片数据无效已清除）`;
+                    }
+                }
+                alert(message);
+            } catch (saveError) {
+                if (saveError.name === 'QuotaExceededError') {
+                    alert('导入失败：数据量过大超出存储限制\n建议删除一些带图片的记录后重试');
+                } else {
+                    throw saveError;
+                }
+            }
+        }
+
+        // 提取新增数据（不在 backup.json 中的数据）
+        function extractNewData(imported, backupData) {
+            const newData = {
+                income: [],
+                assetSnapshots: [],
+                expenses: [],
+                shopping: [],
+                clothing: [],
+                homeAssets: {
+                    shenzhen: [],
+                    chongqing: []
+                },
+                travelProjects: [],
+                savings: imported.savings || {},
+                savingsHistory: []
+            };
+
+            // 提取新增的收入
+            if (imported.income) {
+                const backupIds = new Set((backupData.income || []).map(item => item.id));
+                newData.income = imported.income.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的资产快照
+            if (imported.assetSnapshots) {
+                const backupIds = new Set((backupData.assetSnapshots || []).map(item => item.id));
+                newData.assetSnapshots = imported.assetSnapshots.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的支出
+            if (imported.expenses) {
+                const backupIds = new Set((backupData.expenses || []).map(item => item.id));
+                newData.expenses = imported.expenses.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的消费
+            if (imported.shopping) {
+                const backupIds = new Set((backupData.shopping || []).map(item => item.id));
+                newData.shopping = imported.shopping.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的服饰
+            if (imported.clothing) {
+                const backupIds = new Set((backupData.clothing || []).map(item => item.id));
+                newData.clothing = imported.clothing.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的家居
+            ['shenzhen', 'chongqing'].forEach(location => {
+                if (imported.homeAssets && imported.homeAssets[location]) {
+                    const backupIds = new Set((backupData.homeAssets?.[location] || []).map(item => item.id));
+                    newData.homeAssets[location] = imported.homeAssets[location].filter(item => !backupIds.has(item.id));
+                }
+            });
+
+            // 提取新增的旅行项目
+            if (imported.travelProjects) {
+                const backupIds = new Set((backupData.travelProjects || []).map(item => item.id));
+                newData.travelProjects = imported.travelProjects.filter(item => !backupIds.has(item.id));
+            }
+
+            // 提取新增的储蓄历史
+            if (imported.savingsHistory) {
+                const backupIds = new Set((backupData.savingsHistory || []).map(item => item.id));
+                newData.savingsHistory = imported.savingsHistory.filter(item => !backupIds.has(item.id));
+            }
+
+            console.log('提取新增数据完成', newData);
+            return newData;
+        }
+
+        // 计算导入统计信息
+        function calculateImportStats(newData) {
+            let newCount = 0;
+            let backupCount = 0;
+
+            // 计算新增数据数量
+            newCount += (newData.income || []).length;
+            newCount += (newData.assetSnapshots || []).length;
+            newCount += (newData.expenses || []).length;
+            newCount += (newData.shopping || []).length;
+            newCount += (newData.clothing || []).length;
+            newCount += (newData.homeAssets?.shenzhen || []).length;
+            newCount += (newData.homeAssets?.chongqing || []).length;
+            newCount += (newData.travelProjects || []).length;
+            newCount += (newData.savingsHistory || []).length;
+
+            // 计算 backup.json 数据数量（从当前 accountData）
+            backupCount += (accountData.income || []).length - newCount;
+            backupCount += (accountData.expenses || []).length;
+            backupCount += (accountData.shopping || []).length;
+            backupCount += (accountData.clothing || []).length;
+
+            return {
+                newCount,
+                backupCount,
+                totalCount: (accountData.income || []).length +
+                           (accountData.expenses || []).length +
+                           (accountData.shopping || []).length +
+                           (accountData.clothing || []).length +
+                           (accountData.homeAssets?.shenzhen || []).length +
+                           (accountData.homeAssets?.chongqing || []).length +
+                           (accountData.travelProjects || []).length
+            };
         }
     </script>
 </body>
