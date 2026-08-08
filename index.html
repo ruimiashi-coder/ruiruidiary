@@ -734,7 +734,7 @@
         .card-item-content {
             background: var(--card-bg);
             border-radius: 0;
-            padding: 16px 24px;
+            padding: 16px 24px 0 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -750,7 +750,7 @@
 
         @media (max-width: 768px) {
             .card-item-content {
-                padding: 12px 20px;
+                padding: 12px 20px 0 20px;
                 min-height: 180px;
             }
         }
@@ -869,9 +869,10 @@
             justify-content: center;
             align-items: center;
             gap: 120px;
-            padding: 4px 0;
+            padding: 4px 0 4px 0;
             border-top: 1px solid var(--border-color);
             margin-top: 16px;
+            margin-bottom: 0;
             order: 5;
             touch-action: manipulation;
         }
@@ -879,7 +880,7 @@
         @media (max-width: 768px) {
             .card-actions {
                 gap: 80px;
-                padding: 4px 0;
+                padding: 4px 0 4px 0;
                 margin-top: 12px;
             }
         }
@@ -1959,7 +1960,7 @@
 
             const mealTime = selectedMealTypes.join('、');
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: mealTime,
@@ -1967,7 +1968,14 @@
                 category: '吃饭',
                 subcategory: '',
                 note: menu || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+
+            // 混合模式：同时保存到 newAccountData
+            if (USE_HYBRID_MODE) {
+                newAccountData.expenses.push(newExpense);
+            }
 
             document.getElementById('food-amount').value = '';
             document.getElementById('food-menu').value = '';
@@ -2153,6 +2161,7 @@
             try {
                 // 如果是编辑模式
                 if (currentEditingCardId) {
+                    // 更新 accountData（显示数据）
                     let card;
                     if (currentCardType === 'home') {
                         card = accountData.homeAssets[currentCardLocation].find(c => c.id === currentEditingCardId);
@@ -2169,6 +2178,26 @@
                             card.image = currentCardImage;
                         }
                     }
+
+                    // 混合模式：同时更新 newAccountData
+                    if (USE_HYBRID_MODE) {
+                        let newCard;
+                        if (currentCardType === 'home') {
+                            newCard = newAccountData.homeAssets[currentCardLocation].find(c => c.id === currentEditingCardId);
+                        } else {
+                            const dataKey = currentCardType === 'shopping' ? 'shopping' : 'clothing';
+                            newCard = newAccountData[dataKey].find(c => c.id === currentEditingCardId);
+                        }
+
+                        if (newCard) {
+                            newCard.title = title;
+                            newCard.description = description;
+                            newCard.amount = amount;
+                            if (currentCardImage) {
+                                newCard.image = currentCardImage;
+                            }
+                        }
+                    }
                 } else {
                     // 新增模式
                     const card = {
@@ -2180,16 +2209,26 @@
                         date: new Date().toISOString().split('T')[0]
                     };
 
-                    // 根据类型保存到不同的数据结构
+                    // 混合模式：只保存到 newAccountData 和显示用的 accountData
+                    // 下次刷新时会重新合并，避免重复
+                    if (USE_HYBRID_MODE) {
+                        // 保存到新数据（持久化）
+                        if (currentCardType === 'shopping') {
+                            newAccountData.shopping.push(card);
+                        } else if (currentCardType === 'clothing') {
+                            newAccountData.clothing.push(card);
+                        } else if (currentCardType === 'home') {
+                            newAccountData.homeAssets[currentCardLocation].push(card);
+                        }
+                    }
+
+                    // 添加到 accountData 用于立即显示
                     if (currentCardType === 'shopping') {
                         accountData.shopping.push(card);
-                        if (USE_HYBRID_MODE) newAccountData.shopping.push(card);
                     } else if (currentCardType === 'clothing') {
                         accountData.clothing.push(card);
-                        if (USE_HYBRID_MODE) newAccountData.clothing.push(card);
                     } else if (currentCardType === 'home') {
                         accountData.homeAssets[currentCardLocation].push(card);
-                        if (USE_HYBRID_MODE) newAccountData.homeAssets[currentCardLocation].push(card);
                     }
                 }
 
@@ -2349,11 +2388,20 @@
                 return;
             }
 
+            // 从 accountData 删除（显示数据）
             if (currentDetailCardType === 'home') {
                 accountData.homeAssets[currentDetailCardLocation] = accountData.homeAssets[currentDetailCardLocation].filter(c => c.id !== currentDetailCardId);
+                // 混合模式：同时从 newAccountData 删除
+                if (USE_HYBRID_MODE) {
+                    newAccountData.homeAssets[currentDetailCardLocation] = newAccountData.homeAssets[currentDetailCardLocation].filter(c => c.id !== currentDetailCardId);
+                }
             } else {
                 const dataKey = currentDetailCardType === 'shopping' ? 'shopping' : 'clothing';
                 accountData[dataKey] = accountData[dataKey].filter(c => c.id !== currentDetailCardId);
+                // 混合模式：同时从 newAccountData 删除
+                if (USE_HYBRID_MODE) {
+                    newAccountData[dataKey] = newAccountData[dataKey].filter(c => c.id !== currentDetailCardId);
+                }
             }
 
             saveData();
@@ -2371,11 +2419,20 @@
                 return;
             }
 
+            // 从 accountData 删除（显示数据）
             if (type === 'home') {
                 accountData.homeAssets[location] = accountData.homeAssets[location].filter(c => c.id !== cardId);
+                // 混合模式：同时从 newAccountData 删除
+                if (USE_HYBRID_MODE) {
+                    newAccountData.homeAssets[location] = newAccountData.homeAssets[location].filter(c => c.id !== cardId);
+                }
             } else {
                 const dataKey = type === 'shopping' ? 'shopping' : 'clothing';
                 accountData[dataKey] = accountData[dataKey].filter(c => c.id !== cardId);
+                // 混合模式：同时从 newAccountData 删除
+                if (USE_HYBRID_MODE) {
+                    newAccountData[dataKey] = newAccountData[dataKey].filter(c => c.id !== cardId);
+                }
             }
 
             saveData();
@@ -2480,6 +2537,12 @@
             };
 
             accountData.travelProjects.push(newProject);
+
+            // 混合模式：同时保存到 newAccountData
+            if (USE_HYBRID_MODE) {
+                newAccountData.travelProjects.push(newProject);
+            }
+
             saveData();
             renderTravelProjects();
         }
@@ -2697,10 +2760,20 @@
                 return;
             }
 
-            project[type].push({
+            const newRecord = {
                 description: description,
                 amount: amount
-            });
+            };
+
+            project[type].push(newRecord);
+
+            // 混合模式：同时更新 newAccountData 中的对应项目
+            if (USE_HYBRID_MODE) {
+                const newProject = newAccountData.travelProjects.find(p => p.id === currentTravelProjectId);
+                if (newProject) {
+                    newProject[type].push(newRecord);
+                }
+            }
 
             saveData();
             renderTravelProjectDetail(project);
@@ -2788,7 +2861,7 @@
                 return;
             }
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: '',
@@ -2796,7 +2869,14 @@
                 category: '学习',
                 subcategory: '',
                 note: project || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+
+            // 混合模式：同时保存到 newAccountData
+            if (USE_HYBRID_MODE) {
+                newAccountData.expenses.push(newExpense);
+            }
 
             document.getElementById('study-amount').value = '';
             document.getElementById('study-project').value = '';
@@ -2819,7 +2899,7 @@
                 return;
             }
 
-            accountData.expenses.push({
+            const newExpense = {
                 id: Date.now(),
                 date,
                 time: '',
@@ -2827,7 +2907,14 @@
                 category: '其它',
                 subcategory: '',
                 note: project || ''
-            });
+            };
+
+            accountData.expenses.push(newExpense);
+
+            // 混合模式：同时保存到 newAccountData
+            if (USE_HYBRID_MODE) {
+                newAccountData.expenses.push(newExpense);
+            }
 
             document.getElementById('other-amount').value = '';
             document.getElementById('other-project').value = '';
@@ -2876,12 +2963,19 @@
                 return;
             }
 
-            accountData.income.push({
+            const newIncome = {
                 id: Date.now(),
                 date,
                 category,
                 amount
-            });
+            };
+
+            accountData.income.push(newIncome);
+
+            // 混合模式：同时保存到 newAccountData
+            if (USE_HYBRID_MODE) {
+                newAccountData.income.push(newIncome);
+            }
 
             saveData();
             renderIncome();
