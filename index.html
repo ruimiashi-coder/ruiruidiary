@@ -75,7 +75,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-family: 'STSong', "SimSun", "宋体", serif;
             background: var(--bg-color);
             min-height: 100vh;
             padding: 20px;
@@ -86,6 +86,20 @@
             overflow-x: hidden;
             width: 100%;
             -webkit-overflow-scrolling: touch;
+        }
+
+        /* 全局字体统一 */
+        button,
+        input,
+        textarea,
+        select,
+        .btn,
+        .modal-title,
+        .tab-button,
+        .nav-item,
+        .section-title,
+        .card-section-title {
+            font-family: 'STSong', "SimSun", "宋体", serif;
         }
 
         body.modal-open {
@@ -309,6 +323,7 @@
             color: var(--text-dark);
             font-family: inherit;
             transition: border-color 0.2s, background-color 0.3s, color 0.3s;
+            box-sizing: border-box;
         }
 
         .form-group input[type="date"] {
@@ -1025,6 +1040,8 @@
             gap: 10px;
             margin-bottom: 10px;
             align-items: center;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .travel-record-item input[type="text"] {
@@ -1034,6 +1051,9 @@
             border-radius: 6px;
             font-size: 14px;
             font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .travel-record-item input[type="number"] {
@@ -1043,6 +1063,9 @@
             border-radius: 6px;
             font-size: 14px;
             font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .travel-section {
@@ -3701,28 +3724,35 @@
 
             const btn = document.getElementById('selection-mode-btn');
             const summary = document.getElementById('selection-summary');
-            const checkboxes = document.querySelectorAll('.expense-checkbox');
 
             if (isSelectionMode) {
                 btn.textContent = '完成';
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-primary');
                 summary.style.display = 'block';
-                checkboxes.forEach(cb => cb.classList.add('show'));
             } else {
                 btn.textContent = '选择';
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-secondary');
                 summary.style.display = 'none';
-                checkboxes.forEach(cb => {
-                    cb.classList.remove('show', 'checked');
-                });
             }
 
             // 重新渲染卡片以更新选择指示器
             renderCards();
             renderExpenses();
             renderTravelProjects();
+
+            // 渲染完成后再更新checkbox显示状态
+            setTimeout(() => {
+                const checkboxes = document.querySelectorAll('.expense-checkbox');
+                if (isSelectionMode) {
+                    checkboxes.forEach(cb => cb.classList.add('show'));
+                } else {
+                    checkboxes.forEach(cb => {
+                        cb.classList.remove('show', 'checked');
+                    });
+                }
+            }, 0);
 
             updateSelectedTotal();
         }
